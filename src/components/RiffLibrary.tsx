@@ -106,11 +106,16 @@ export function RiffLibrary({ theme = 'dark', category = 'guitar' }: { theme?: '
                       isDark ? "text-white" : "text-black"
                     )}>{riff.title}</h4>
                     <p className={cn(
-                      "text-[10px] leading-relaxed line-clamp-1 opacity-60 mb-3",
+                      "text-[10px] leading-relaxed line-clamp-1 opacity-60 mb-1",
                       isDark ? "text-white" : "text-black"
                     )}>
                       {riff.description}
                     </p>
+                    {riff.chords && (
+                      <div className="text-[8px] font-bold text-emerald-500/70 uppercase tracking-wider mb-3">
+                        {riff.chords}
+                      </div>
+                    )}
                   </div>
                   <div className={cn(
                     "inline-flex px-3 py-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 self-start"
@@ -179,11 +184,16 @@ export function RiffLibrary({ theme = 'dark', category = 'guitar' }: { theme?: '
                   )}>{riff.title}</h4>
                 </div>
                 <p className={cn(
-                   "text-xs leading-relaxed line-clamp-2 transition-colors",
+                   "text-xs leading-relaxed line-clamp-2 transition-colors mb-2",
                   isDark ? "text-white/40" : "text-black/50"
                 )}>
                   {riff.description}
                 </p>
+                {riff.chords && (
+                  <div className="text-[9px] font-bold text-emerald-500/70 uppercase tracking-widest">
+                    {riff.chords}
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center justify-between mt-auto">

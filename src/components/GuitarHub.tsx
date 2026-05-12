@@ -198,7 +198,8 @@ export function GuitarHub({ currentNote, frequency, cents, referenceA = 440, the
             animate={{ scale: 1.3, opacity: 0.05 }}
             exit={{ scale: 1.5, opacity: 0 }}
             transition={{ duration: 1.5, repeat: Infinity }}
-            className="absolute inset-0 rounded-full bg-emerald-500 blur-3xl pointer-events-none"
+            className="absolute inset-0 rounded-full blur-3xl pointer-events-none"
+            style={{ backgroundColor: accentColor }}
           />
         )}
       </AnimatePresence>

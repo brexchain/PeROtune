@@ -179,6 +179,15 @@ export default function App() {
                     "flex flex-col items-center gap-8",
                     settings.layoutMode === 'horizontal' ? "lg:pt-20" : ""
                   )}>
+                    <div className="flex flex-col items-center gap-1 mb-2">
+                       <h2 className={cn(
+                         "text-2xl font-black italic tracking-tighter uppercase",
+                         theme === 'dark' ? "text-white" : "text-black"
+                       )}>
+                         {instruments.find(i => i.id === instrument)?.label}
+                       </h2>
+                       <div className="h-1 w-12 rounded-full" style={{ backgroundColor: settings.accentColor }} />
+                    </div>
                     <div className="flex items-center gap-6 sm:gap-12">
                       {/* 432Hz Button */}
                       <div className="flex flex-col items-center gap-2">
