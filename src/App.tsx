@@ -343,6 +343,11 @@ export default function App() {
                     accentColor={settings.accentColor}
                   />
                 </div>
+
+                {/* Bottom Discovery Section */}
+                <div className="w-full mt-24">
+                   <RiffLibrary theme={theme} category="all" />
+                </div>
               </motion.div>
             )}
 

@@ -15,7 +15,10 @@ export function RiffLibrary({ theme = 'dark', category = 'guitar' }: { theme?: '
   const containerRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
-  const filteredRiffs = RIFFS.filter(r => r.category === category);
+  const filteredRiffs = category === 'all' 
+    ? RIFFS 
+    : RIFFS.filter(r => r.category === category);
+    
   const pagedRiffs = filteredRiffs.slice(0, visibleCount);
   const favoriteRiffs = RIFFS.filter(r => favorites.includes(r.id));
 
@@ -95,6 +98,9 @@ export function RiffLibrary({ theme = 'dark', category = 'guitar' }: { theme?: '
                     </button>
                   </div>
                   <div>
+                    <span className="text-[8px] font-mono text-emerald-500/50 block mb-1">
+                      #{String(filteredRiffs.findIndex(r => r.id === riff.id) + 1).padStart(3, '0')}
+                    </span>
                     <h4 className={cn(
                       "text-sm font-bold mb-1 transition-colors",
                       isDark ? "text-white" : "text-black"
@@ -163,7 +169,10 @@ export function RiffLibrary({ theme = 'dark', category = 'guitar' }: { theme?: '
               </div>
 
               <div className="mb-8">
-                <div className="flex justify-between items-start mb-2 pr-10">
+                <div className="flex flex-col mb-2 pr-10">
+                  <span className="text-[9px] font-mono text-emerald-400/50 mb-1">
+                    #{String(filteredRiffs.indexOf(riff) + 1).padStart(3, '0')}
+                  </span>
                   <h4 className={cn(
                     "text-base font-bold transition-colors",
                     isDark ? "text-white/90" : "text-black/90"
