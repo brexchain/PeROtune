@@ -38,9 +38,9 @@ export function RiffLibrary({ theme = 'dark', category = 'guitar' }: { theme?: '
         }
       },
       { 
-        root: null, // Use viewport
-        rootMargin: '0px 800px 0px 0px', // Pre-load when sentinel is 800px to the right of viewport
-        threshold: 0.1 
+        root: containerRef.current,
+        rootMargin: '0px 400px 0px 0px', // Trigger when 400px away from the right edge
+        threshold: 0 
       }
     );
 
