@@ -1,0 +1,6 @@
+{
+  "name": "PeROtuner",
+  "description": "A high-fidelity boutique tuning station for Guitar, 12-String, and Ukulele. Featuring precision YIN pitch detection, local studio configuration, and a professional riff library.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": []
+}
