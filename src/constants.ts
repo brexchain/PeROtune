@@ -42,6 +42,7 @@ export interface Riff {
   description: string;
   pattern: string;
   chords?: string;
+  refrain?: string;
   category: InstrumentCategory;
 }
 
@@ -52,9 +53,9 @@ export const RIFFS: Riff[] = [
   { id: 'g3', title: 'Coastal Breeze', description: 'Light palm-muted texture for ambient rhythm.', pattern: 'M M S M M S', chords: 'Em7 - Cadd9 - G - D/F#', category: 'guitar' },
   { id: 'g4', title: 'Für Elise', description: 'Beethoven\'s classic theme arranged for guitar.', pattern: 'E D# E D# E B D C A', chords: 'Am - E7 - Am', category: 'guitar' },
   { id: 'g5', title: 'Hallelujah', description: 'Leonard Cohen\'s iconic arpeggio progression.', pattern: '6 4 3 2 3 4', chords: 'C - Am - C - Am - F - G - C - G', category: 'guitar' },
-  { id: 'g6', title: 'Smoke on Water', description: 'The most famous power chord riff ever.', pattern: 'G Bb C G Bb Db C', chords: 'G5 - Bb5 - C5', category: 'guitar' },
-  { id: 'g7', title: 'Seven Nation Army', description: 'The ultimate stadium basement riff.', pattern: 'E E G E D C B', chords: 'Em - G - C - B', category: 'guitar' },
-  { id: 'g8', title: 'Back in Black', description: 'High-voltage AC/DC power rhythm.', pattern: 'E D A (Riff)', chords: 'E - D - A', category: 'guitar' },
+  { id: 'g6', title: 'Smoke on Water', description: 'The most famous power chord riff ever.', pattern: 'G Bb C G Bb Db C', chords: 'G5 - Bb5 - C5', refrain: 'Smoke on the water, fire in the sky...', category: 'guitar' },
+  { id: 'g7', title: 'Seven Nation Army', description: 'The ultimate stadium basement riff.', pattern: 'E E G E D C B', chords: 'Em - G - C - B', refrain: 'I\'m gonna fight \'em off, a seven nation army couldn\'t hold me back...', category: 'guitar' },
+  { id: 'g8', title: 'Back in Black', description: 'High-voltage AC/DC power rhythm.', pattern: 'E D A (Riff)', chords: 'E - D - A', refrain: 'Back in black, I hit the sack, I\'ve been too long, I\'m glad to be back...', category: 'guitar' },
   { id: 'g9', title: 'Iron Man', description: 'Tony Iommi\'s heavy metal blueprint.', pattern: 'B D D E E G F# G F# G D D E E', chords: 'B5 - D5 - E5', category: 'guitar' },
   { id: 'g10', title: 'Sweet Child O\' Mine', description: 'Slash\'s circular melodic exercise.', pattern: 'D D A G D D A G', chords: 'D - C - G - D', category: 'guitar' },
   { id: 'g11', title: 'Sunshine of Your Love', description: 'The essential blues-rock lick.', pattern: 'D D C D G G# G F D', chords: 'D5 - C5 - G5', category: 'guitar' },
@@ -62,13 +63,13 @@ export const RIFFS: Riff[] = [
   { id: 'g13', title: 'Satisfaction', description: 'Keith Richards\' fuzzed-out foundation.', pattern: 'B B B C# D D C# C#', chords: 'E - A - D', category: 'guitar' },
   { id: 'g14', title: 'Paranoid', description: 'Fast chugging metal rhythm.', pattern: 'E D G E D G E', chords: 'E5 - D5 - G5', category: 'guitar' },
   { id: 'g15', title: 'Enter Sandman', description: 'Metallica\'s descending nightmare hook.', pattern: 'E G Bb E G# G', chords: 'E5 - G5 - Bb5', category: 'guitar' },
-  { id: 'g16', title: 'Smells Like Teen Spirit', description: 'The anthem of a generation.', pattern: 'F F Bb Bb G# G# C# C#', chords: 'F5 - Bb5 - Ab5 - Db5', category: 'guitar' },
-  { id: 'g17', title: 'Wild Thing', description: 'The garage rock essential.', pattern: 'A D E D A', chords: 'A - D - E - D', category: 'guitar' },
+  { id: 'g16', title: 'Smells Like Teen Spirit', description: 'The anthem of a generation.', pattern: 'F F Bb Bb G# G# C# C#', chords: 'F5 - Bb5 - Ab5 - Db5', refrain: 'With the lights out, it\'s less dangerous, here we are now, entertain us...', category: 'guitar' },
+  { id: 'g17', title: 'Wild Thing', description: 'The garage rock essential.', pattern: 'A D E D A', chords: 'A - D - E - D', refrain: 'Wild thing, you make my heart sing, you make everything groovy...', category: 'guitar' },
   { id: 'g18', title: 'La Grange', description: 'ZZ Top\'s boogie-blues shuffle.', pattern: 'A C D A', chords: 'A5 - C5 - D5', category: 'guitar' },
   { id: 'g19', title: 'Come As You Are', description: 'Nirvana\'s watery chromatic walk.', pattern: 'E E F F# A F# E F# E D E', chords: 'F#m - E', category: 'guitar' },
   { id: 'g20', title: 'Purple Haze', description: 'Hendrix\'s tritone-infused psych rock.', pattern: 'E G A E Bb A G', chords: 'E7#9 - G - A', category: 'guitar' },
-  { id: 'g21', title: 'Wonderwall', description: 'The campfire legend.', pattern: 'Em7 G Dsus4 A7sus4', chords: 'Em7 - G - D - A7sus4', category: 'guitar' },
-  { id: 'g22', title: 'Knockin\' Heaven\'s Door', description: 'Dylan\'s essential four-chord flow.', pattern: 'G D Am / G D C', chords: 'G - D - Am / G - D - C', category: 'guitar' },
+  { id: 'g21', title: 'Wonderwall', description: 'The campfire legend.', pattern: 'Em7 G Dsus4 A7sus4', chords: 'Em7 - G - D - A7sus4', refrain: 'And all the roads we have to walk are winding, and all the lights that lead us there are blinding...', category: 'guitar' },
+  { id: 'g22', title: 'Knockin\' Heaven\'s Door', description: 'Dylan\'s essential four-chord flow.', pattern: 'G D Am / G D C', chords: 'G - D - Am / G - D - C', refrain: 'Knock, knock, knockin\' on heaven\'s door...', category: 'guitar' },
   { id: 'g23', title: 'Black Dog', description: 'Led Zeppelin\'s complex math-rock riff.', pattern: 'A E G# A C# D E', chords: 'A7 - E7 - D7', category: 'guitar' },
   { id: 'g24', title: 'Heartbreaker', description: 'Unforgettable Page blues turnaround.', pattern: 'A G# G F# F E', chords: 'Am - D - E', category: 'guitar' },
   { id: 'g25', title: 'Crazy Train', description: 'Ozzy\'s high-speed minor scale run.', pattern: 'F# F# C# F# D F# C# F# B A G# A B G#', chords: 'F#m - D - E - A', category: 'guitar' },
@@ -150,8 +151,8 @@ export const RIFFS: Riff[] = [
   { id: 'g101', title: 'Machine Gun', description: 'Epic, screaming fuzzed-out odyssey.', pattern: 'E G# A Bb B', chords: 'E7 - G - A', category: 'guitar' },
   
   // --- UKULELE (21 RIFFS) ---
-  { id: 'u1', title: 'Over the Rainbow', description: 'Israel Kamakawiwoʻole\'s legendary island strum.', pattern: 'D - DU - UDU', chords: 'C - G - Am - F', category: 'ukulele' },
-  { id: 'u2', title: 'Riptide', description: 'Fast, percussive folk strum for high energy.', pattern: 'D D U U D U', chords: 'Am - G - C', category: 'ukulele' },
+  { id: 'u1', title: 'Over the Rainbow', description: 'Israel Kamakawiwoʻole\'s legendary island strum.', pattern: 'D - DU - UDU', chords: 'C - G - Am - F', refrain: 'Somewhere over the rainbow, way up high...', category: 'ukulele' },
+  { id: 'u2', title: 'Riptide', description: 'Fast, percussive folk strum for high energy.', pattern: 'D D U U D U', chords: 'Am - G - C', refrain: 'I was scared of dentists and the dark, I was scared of pretty girls and starting conversations...', category: 'ukulele' },
   { id: 'u3', title: 'I\'m Yours', description: 'Jason Mraz\'s relaxed reggae-influenced island rhythm.', pattern: 'D U - U - U - U', chords: 'C - G - Am - F', category: 'ukulele' },
   { id: 'u4', title: 'Count On Me', description: 'Bruno Mars\' cheerful rhythmic foundation.', pattern: '4 3 2 1 2 3', chords: 'C - Em - Am - G - F', category: 'ukulele' },
   { id: 'u5', title: 'Hey Soul Sister', description: 'Rapid, bright Train-inspired pop strum.', pattern: 'D DU UDU', chords: 'E - B - C#m - A', category: 'ukulele' },
