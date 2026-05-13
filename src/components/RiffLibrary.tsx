@@ -286,7 +286,7 @@ export function RiffLibrary({
                           <div className="space-y-1">
                             <span className="text-[9px] uppercase tracking-[0.4em] text-emerald-500/40 font-black">{t('focusTip')}</span>
                             <p className="text-xs text-white/60 leading-relaxed font-medium px-4">
-                              {riff.description}
+                              {t((riff.id + 'Desc') as any, riff.description)}
                             </p>
                           </div>
 
