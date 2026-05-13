@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
+import { CircleOfFifths } from './CircleOfFifths';
 
 export interface StringConfig {
   note: string;
@@ -11,6 +12,8 @@ export interface StringConfig {
 
 interface GuitarHubProps {
   currentNote: string | null;
+  playedNote?: string | null;
+  playingRiff?: { id: string; activeIndex: number } | null;
   frequency: number;
   cents: number;
   referenceA?: number;
@@ -23,11 +26,22 @@ interface GuitarHubProps {
   };
 }
 
-export function GuitarHub({ currentNote, frequency, cents, referenceA = 440, theme = 'dark', strings, customColors }: GuitarHubProps) {
+export function GuitarHub({ currentNote, playedNote, playingRiff, frequency, cents, referenceA = 440, theme = 'dark', strings, customColors }: GuitarHubProps) {
   const isDark = theme === 'dark';
-  const accentColor = customColors?.accent || '#10b981'; // Default emerald
+  const accentColor = customColors?.accent || '#10b981';
   const ringColor = customColors?.ring || (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)');
   const glowColor = customColors?.glow || 'rgba(16,185,129,0.3)';
+  
+  // Find current riff data if playing
+  const [activeRiffData, setActiveRiffData] = React.useState<any>(null);
+  
+  React.useEffect(() => {
+    if (playingRiff) {
+      // We'd ideally import RIFFS but for now we'll just handle the visualization of what we have
+      // In a real app we might fetch or pass the whole riff object
+    }
+  }, [playingRiff]);
+
   const targetFreq = currentNote ? (
     referenceA * Math.pow(2, (["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"].indexOf(currentNote) - 9) / 12) * 
     Math.pow(2, Math.floor((frequency ? Math.log2(frequency/referenceA)*12 + 69 : 0) / 12) - 5)
@@ -80,6 +94,15 @@ export function GuitarHub({ currentNote, frequency, cents, referenceA = 440, the
 
       {/* Center Soundhole Depth */}
       <div className="absolute w-56 h-56 rounded-full bg-black shadow-[inset_0_0_50px_rgba(0,0,0,1)] overflow-hidden flex items-center justify-center">
+        {/* Circle of Fifths Centerpiece */}
+        <div className="absolute inset-4 opacity-80 group-hover:opacity-100 transition-opacity">
+          <CircleOfFifths 
+            activeNote={playedNote || currentNote} 
+            accentColor={accentColor} 
+            theme="dark" 
+          />
+        </div>
+
         {/* Freq Display - Top center of inner hole */}
         <div className="absolute top-6 flex flex-col items-center z-20">
           <span className="text-[8px] uppercase tracking-[0.3em] text-white/30 font-mono mb-1">Frequency Monitor</span>
@@ -115,7 +138,7 @@ export function GuitarHub({ currentNote, frequency, cents, referenceA = 440, the
           style={{ gap: `${stringGap}px` }}
         >
           {strings.map((string, idx) => {
-            const isMatched = currentNote === string.note;
+            const isMatched = currentNote === string.note || playedNote === string.note;
             const isTuned = isMatched && Math.abs(cents) <= 2;
             
             return (
@@ -174,16 +197,70 @@ export function GuitarHub({ currentNote, frequency, cents, referenceA = 440, the
 
         {/* Active Note Center Circle */}
         <AnimatePresence>
-          {currentNote && (
+          {playingRiff && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="absolute inset-0 z-40 flex flex-col items-center justify-center pointer-events-none"
+            >
+              <div className="flex gap-2">
+                {[...Array(8)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    animate={{ 
+                      scale: playingRiff.activeIndex % 8 === i ? 1.2 : 1,
+                      backgroundColor: playingRiff.activeIndex % 8 === i ? accentColor : 'rgba(255,255,255,0.05)',
+                      height: playingRiff.activeIndex % 8 === i ? '24px' : '16px'
+                    }}
+                    className="w-1.5 rounded-full"
+                  />
+                ))}
+              </div>
+              <div className="mt-4 flex flex-col items-center">
+                <span className="text-[8px] uppercase tracking-widest font-black opacity-40 mb-1">Rhythmic Pulse</span>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-3xl font-black italic" style={{ color: accentColor }}>
+                    {playingRiff.activeIndex + 1}
+                  </span>
+                  <span className="text-[10px] opacity-30 font-bold">/ 8</span>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {currentNote && !playingRiff && (
               <motion.div 
                 initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
+                animate={{ 
+                  scale: Math.abs(cents) <= 2 ? 1.2 : 1, 
+                  opacity: 1,
+                  backgroundColor: Math.abs(cents) <= 2 ? `${accentColor}33` : 'rgba(255,255,255,0.05)'
+                }}
                 exit={{ scale: 0.8, opacity: 0 }}
-                className="absolute w-24 h-24 rounded-full border bg-white/[0.05] flex flex-col items-center justify-center z-10 pointer-events-none"
-                style={{ borderColor: `${accentColor}33` }}
+                className="absolute w-28 h-28 rounded-full border flex flex-col items-center justify-center z-30 pointer-events-none backdrop-blur-sm shadow-2xl"
+                style={{ 
+                  borderColor: Math.abs(cents) <= 2 ? accentColor : `${accentColor}33`,
+                  boxShadow: Math.abs(cents) <= 2 ? `0 0 30px ${accentColor}4D` : 'none'
+                }}
               >
-                <span className="text-[10px] uppercase tracking-widest font-mono mb-1 opacity-60" style={{ color: accentColor }}>LOCK</span>
-                <span className="text-4xl font-serif font-black italic text-white leading-none">{currentNote}</span>
+                <span className={cn(
+                  "text-[9px] uppercase tracking-[0.3em] font-black mb-1 transition-opacity",
+                  Math.abs(cents) <= 2 ? "opacity-100" : "opacity-40"
+                )} style={{ color: accentColor }}>
+                  {Math.abs(cents) <= 2 ? 'Perfect' : 'Tuning'}
+                </span>
+                <span className={cn(
+                  "text-5xl font-black italic text-white leading-none tracking-tighter transition-all duration-200",
+                  Math.abs(cents) <= 2 ? "scale-110 drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]" : ""
+                )}>
+                  {currentNote}
+                </span>
+                <div className="mt-1 flex items-center gap-1">
+                   <div className={cn("w-1 h-1 rounded-full", Math.abs(cents) <= 2 ? "bg-emerald-400" : "bg-white/20")} />
+                   <div className={cn("w-1 h-1 rounded-full", Math.abs(cents) <= 2 ? "bg-emerald-400" : "bg-white/20")} />
+                   <div className={cn("w-1 h-1 rounded-full", Math.abs(cents) <= 2 ? "bg-emerald-400" : "bg-white/20")} />
+                </div>
               </motion.div>
           )}
         </AnimatePresence>

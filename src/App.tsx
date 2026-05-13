@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Settings, 
@@ -12,7 +12,8 @@ import {
   Zap,
   LayoutGrid,
   Sun,
-  Moon
+  Moon,
+  MessageCircle
 } from 'lucide-react';
 import { usePitchDetection } from './hooks/usePitchDetection';
 import { GuitarHub } from './components/GuitarHub';
@@ -20,11 +21,15 @@ import { NeedleBar } from './components/NeedleBar';
 import { ToneReference } from './components/ToneReference';
 import { RiffLibrary } from './components/RiffLibrary';
 import { Metronome } from './components/Metronome';
+import { TheoryView } from './components/TheoryView';
+import { GuitarStringsBackground } from './components/GuitarStringsBackground';
+import { FeedbackSection } from './components/FeedbackSection';
+import { ContactPopup } from './components/ContactPopup';
 import { LuthierConfig, StudioSettings } from './components/LuthierConfig';
 import { cn } from './lib/utils';
-import { GUITAR_STRINGS, UKULELE_STRINGS, TWELVE_STRING_STRINGS, InstrumentCategory } from './constants';
+import { GUITAR_STRINGS, UKULELE_STRINGS, TWELVE_STRING_STRINGS, InstrumentCategory, Riff } from './constants';
 
-type ViewMode = 'tuner' | 'metronome' | 'riffs';
+type ViewMode = 'tuner' | 'metronome' | 'riffs' | 'theory';
 
 const DEFAULT_SETTINGS: StudioSettings = {
   bgColor: '#0a0a0a',
@@ -35,10 +40,120 @@ const DEFAULT_SETTINGS: StudioSettings = {
 
 export default function App() {
   const [activeView, setActiveView] = useState<ViewMode>('tuner');
+  const [isContactOpen, setIsContactOpen] = useState(false);
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [instrument, setInstrument] = useState<InstrumentCategory>('guitar');
   const [referenceFreq, setReferenceFreq] = useState(440);
   const [isConfigOpen, setIsConfigOpen] = useState(false);
+  const [isMetronomeOpen, setIsMetronomeOpen] = useState(false);
+  const [playedReferenceNote, setPlayedReferenceNote] = useState<string | null>(null);
+  const [playingRiff, setPlayingRiff] = useState<{ id: string; activeIndex: number } | null>(null);
+  const [showPerfectFlash, setShowPerfectFlash] = useState(false);
+  const [tunedStrings, setTunedStrings] = useState<string[]>([]);
+  const playbackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+
+  const handlePlayRiff = (riff: Riff) => {
+    if (!riff.pattern && !riff.chords) return;
+    
+    if (!audioCtxRef.current) {
+        audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+    }
+    const ctx = audioCtxRef.current;
+    if (ctx.state === 'suspended') ctx.resume();
+
+    const getFreq = (note: string, octave: number = 4) => {
+        const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        const semitoneMap: Record<string, number> = {
+            'Db': 1, 'Eb': 3, 'Gb': 6, 'Ab': 8, 'Bb': 10
+        };
+        let step = noteNames.indexOf(note.toUpperCase());
+        if (step === -1) step = semitoneMap[note] ?? 0;
+        const n = (octave * 12) + step + 12;
+        const freq = 440 * Math.pow(2, (n - 69) / 12);
+        return freq * (referenceFreq / 440);
+    };
+
+    const playTone = (noteStr: string, startTime: number, duration: number = 0.5) => {
+        const match = noteStr.match(/^([A-G][#b]?)([0-8])?$/i);
+        if (!match && !/^\d$/.test(noteStr)) return;
+
+        let freq = 0;
+        if (match) {
+            const noteName = match[1];
+            const octave = match[2] ? parseInt(match[2]) : 3;
+            freq = getFreq(noteName, octave);
+        } else {
+            const map = ['E2', 'A2', 'D3', 'G3', 'B3', 'E4'];
+            const note = map[parseInt(noteStr) % 6];
+            const m = note.match(/^([A-G][#b]?)([0-8])?$/i);
+            freq = getFreq(m![1], parseInt(m![2]));
+        }
+
+        const osc = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc2.type = 'sine';
+        osc.frequency.setValueAtTime(freq, startTime);
+        osc2.frequency.setValueAtTime(freq * 2.01, startTime); 
+        gain.gain.setValueAtTime(0, startTime);
+        gain.gain.linearRampToValueAtTime(0.25, startTime + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(2000, startTime);
+        filter.frequency.exponentialRampToValueAtTime(400, startTime + duration);
+        osc.connect(gain);
+        osc2.connect(gain);
+        gain.connect(filter);
+        filter.connect(ctx.destination);
+        osc.start(startTime);
+        osc2.start(startTime);
+        osc.stop(startTime + duration);
+        osc2.stop(startTime + duration);
+    };
+
+    setPlayedReferenceNote(riff.title);
+
+    if (riff.pattern) {
+        const cleanPattern = riff.pattern.replace(/\(Riff\)|\/|resonate/g, '');
+        const patternTokens = cleanPattern.split(/\s+/).filter(t => t.trim().length > 0);
+        const tempo = 0.45;
+        const loopGap = 1.6;
+
+        [0, 1].forEach(loopIndex => {
+            const loopOffset = loopIndex * (patternTokens.length * tempo + loopGap);
+            patternTokens.forEach((token, i) => {
+                let noteToPlay = token;
+                if (['D', 'U', 'P', 'I', 'M', 'A', 'X', 'S'].includes(token.toUpperCase())) {
+                    const rootMatch = riff.chords?.split('-')[0].trim().match(/^[A-G]([#b])?/);
+                    noteToPlay = rootMatch ? rootMatch[0] + '3' : 'G3';
+                }
+                const startTime = loopOffset + (i * tempo);
+                playTone(noteToPlay, ctx.currentTime + startTime, 0.4);
+                setTimeout(() => setPlayingRiff({ id: riff.id, activeIndex: i }), startTime * 1000);
+            });
+        });
+        setTimeout(() => setPlayingRiff(null), (2 * (patternTokens.length * tempo + loopGap)) * 1000);
+    } else if (riff.chords) {
+        const chords = riff.chords.split('-').map(c => c.trim());
+        const tempo = 1.0;
+        const loopGap = 1.6;
+        [0, 1].forEach(loopIndex => {
+            const loopOffset = loopIndex * (chords.length * tempo + loopGap);
+            chords.forEach((chord, i) => {
+                const rootMatch = chord.match(/^[A-G]([#b])?/);
+                if (rootMatch) {
+                    const startTime = loopOffset + (i * tempo);
+                    playTone(rootMatch[0] + '3', ctx.currentTime + startTime, 0.7);
+                    setTimeout(() => setPlayingRiff({ id: riff.id, activeIndex: i }), startTime * 1000);
+                }
+            });
+        });
+        setTimeout(() => setPlayingRiff(null), (2 * (chords.length * tempo + loopGap)) * 1000);
+    }
+  };
   
   const [settings, setSettings] = useState<StudioSettings>(() => {
     const saved = localStorage.getItem('perotuner-settings');
@@ -49,6 +164,33 @@ export default function App() {
   });
 
   const { pitchData, isActive, start, stop } = usePitchDetection(referenceFreq);
+
+  useEffect(() => {
+    if (pitchData && Math.abs(pitchData.cents) <= 2) {
+      setShowPerfectFlash(true);
+      
+      // Update tuned strings tracking
+      const currentInstrumentStrings = getStrings();
+      const matchedString = currentInstrumentStrings.find(s => 
+        s.note === pitchData.note && 
+        Math.abs(s.freq - pitchData.freq) < 10 // Basic safety check
+      );
+      
+      if (matchedString) {
+        setTunedStrings(prev => {
+          if (prev.includes(matchedString.label)) return prev;
+          return [...prev, matchedString.label];
+        });
+      }
+
+      const timer = setTimeout(() => setShowPerfectFlash(false), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [pitchData?.note, pitchData?.cents, pitchData?.freq]);
+
+  useEffect(() => {
+    setTunedStrings([]);
+  }, [instrument]);
 
   useEffect(() => {
     localStorage.setItem('perotuner-settings', JSON.stringify(settings));
@@ -80,13 +222,26 @@ export default function App() {
   ];
 
   return (
-    <div 
-      className={cn(
-        "min-h-screen transition-all duration-700 font-sans selection:bg-emerald-500/30 pb-32",
-        theme === 'dark' ? "text-white" : "text-[#1a1a1a]"
-      )}
-      style={{ backgroundColor: settings.bgColor }}
-    >
+    <>
+      {/* Success Flash */}
+      <AnimatePresence>
+        {showPerfectFlash && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.15 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-emerald-500 pointer-events-none z-[100] blur-3xl transition-opacity duration-300"
+          />
+        )}
+      </AnimatePresence>
+
+      <div 
+        className={cn(
+          "min-h-screen transition-all duration-700 font-sans selection:bg-emerald-500/30 pb-32",
+          theme === 'dark' ? "text-white" : "text-[#1a1a1a]"
+        )}
+        style={{ backgroundColor: settings.bgColor }}
+      >
       <LuthierConfig 
         isOpen={isConfigOpen} 
         onClose={() => setIsConfigOpen(false)}
@@ -142,8 +297,14 @@ export default function App() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="flex flex-col items-center"
+                className="flex flex-col items-center relative"
               >
+                <GuitarStringsBackground 
+                  allStrings={getStrings()} 
+                  tunedStrings={tunedStrings} 
+                  className="opacity-20 top-[-100px] bottom-0"
+                />
+
                 {/* Instrument Selector */}
                 <div className={cn(
                   "flex p-1 rounded-2xl border mb-12 backdrop-blur-xl",
@@ -188,7 +349,47 @@ export default function App() {
                        </h2>
                        <div className="h-1 w-12 rounded-full" style={{ backgroundColor: settings.accentColor }} />
                     </div>
+
+                    {/* Metronome Overlay */}
+                    <AnimatePresence>
+                      {isMetronomeOpen && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          className="w-full overflow-hidden mb-4"
+                        >
+                          <div className={cn(
+                            "rounded-[2.5rem] border p-2",
+                            theme === 'dark' ? "bg-emerald-950/20 border-white/5" : "bg-white border-black/5 shadow-2xl"
+                          )}>
+                            <Metronome theme={theme} accentColor={settings.accentColor} />
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                     <div className="flex items-center gap-6 sm:gap-12">
+                      {/* Signal Strength Improvement */}
+                      <div className="flex flex-col items-center gap-2">
+                        <div className={cn(
+                          "w-12 h-12 rounded-2xl flex items-center justify-center transition-all border",
+                          theme === 'dark' ? "bg-white/5 border-white/5" : "bg-black/5 border-black/5"
+                        )}>
+                          <div className="flex flex-col-reverse gap-0.5 w-6 h-6 items-center justify-center">
+                            {[1, 2, 3, 4].map(idx => (
+                              <div 
+                                key={idx} 
+                                className="w-4 h-0.5 rounded-full transition-colors duration-200"
+                                style={{ 
+                                  backgroundColor: isActive && idx <= 3 ? settings.accentColor : 'rgba(128,128,128,0.2)' 
+                                }}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        <span className="text-[7px] uppercase tracking-widest font-black opacity-30">Signal</span>
+                      </div>
+
                       {/* 432Hz Button */}
                       <div className="flex flex-col items-center gap-2">
                         <motion.button
@@ -227,7 +428,7 @@ export default function App() {
                         </span>
                       </div>
 
-                      {/* Primary Mic Toggle */}
+                       {/* Primary Mic Toggle */}
                       <div className="flex flex-col items-center gap-4">
                         <motion.button
                           whileTap={{ scale: 0.9 }}
@@ -242,33 +443,36 @@ export default function App() {
                           )}
                           style={isActive ? { backgroundColor: '#10b981', boxShadow: `0 0 50px #10b98166` } : {}}
                         >
+                          {isActive && (
+                            <motion.div
+                              animate={{ 
+                                scale: [1, 1.4, 1], 
+                                opacity: [0.3, 0, 0.3],
+                                boxShadow: [`0 0 10px #10b981`, `0 0 40px #10b981`, `0 0 10px #10b981`]
+                              }}
+                              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                              className="absolute inset-0 rounded-full bg-emerald-500/20"
+                            />
+                          )}
                           {isActive ? (
-                            <Mic size={32} className="text-white" />
+                            <Mic size={32} className="text-white relative z-10" />
                           ) : (
                             <MicOff size={32} className={cn(
-                              "transition-all duration-300",
+                              "transition-all duration-300 relative z-10",
                               theme === 'dark' ? "text-white/20" : "text-black/20", 
                               "group-hover:text-emerald-500/80"
                             )} />
                           )}
-                          
-                          {isActive && (
-                            <motion.div 
-                              className="absolute -inset-2 rounded-full border border-white/20 border-t-white"
-                              animate={{ rotate: 360 }}
-                              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                            />
-                          )}
                         </motion.button>
                         <span className={cn(
-                          "text-[9px] uppercase tracking-[0.2em] font-black transition-opacity",
-                          isActive ? "opacity-100" : "opacity-30"
-                        )} style={isActive ? { color: '#10b981' } : {}}>
-                          {isActive ? "Engine Active" : "Ready"}
+                          "text-[9px] uppercase tracking-[0.2em] font-black transition-all",
+                          isActive ? "text-emerald-500 animate-pulse" : "opacity-30"
+                        )}>
+                          {isActive ? "Listening..." : "Start Mic"}
                         </span>
                       </div>
 
-                      {/* 440Hz Button */}
+                       {/* 440Hz Button */}
                       <div className="flex flex-col items-center gap-2">
                         <motion.button
                           whileHover={{ scale: 1.05 }}
@@ -305,6 +509,28 @@ export default function App() {
                           Standard
                         </span>
                       </div>
+
+                      {/* Metronome Toggle improvement */}
+                      <div className="flex flex-col items-center gap-2">
+                        <motion.button
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => setIsMetronomeOpen(!isMetronomeOpen)}
+                          className={cn(
+                            "w-12 h-12 rounded-2xl flex items-center justify-center transition-all border",
+                            isMetronomeOpen 
+                              ? "shadow-lg bg-emerald-500/10 border-emerald-500/30" 
+                              : theme === 'dark' ? "bg-white/5 border-white/5 opacity-40 hover:opacity-100" : "bg-black/5 border-black/5 opacity-40 hover:opacity-100"
+                          )}
+                        >
+                          <Clock size={16} className={cn(isMetronomeOpen ? "text-emerald-500" : "text-gray-400")} />
+                        </motion.button>
+                        <span className={cn(
+                          "text-[8px] uppercase tracking-widest font-bold font-mono transition-opacity whitespace-nowrap",
+                          isMetronomeOpen ? "opacity-100" : "opacity-20"
+                        )} style={isMetronomeOpen ? { color: settings.accentColor } : {}}>
+                          Click
+                        </span>
+                      </div>
                     </div>
                   </div>
 
@@ -320,6 +546,8 @@ export default function App() {
                     <div className="relative group">
                       <GuitarHub 
                         currentNote={pitchData?.note ?? null} 
+                        playedNote={playedReferenceNote}
+                        playingRiff={playingRiff}
                         frequency={pitchData?.frequency ?? 0}
                         cents={pitchData?.cents ?? 0} 
                         referenceA={referenceFreq}
@@ -350,13 +578,46 @@ export default function App() {
                     theme={theme} 
                     notes={getStrings()} 
                     accentColor={settings.accentColor}
+                    onNoteTrigger={setPlayedReferenceNote}
                   />
                 </div>
 
                 {/* Bottom Discovery Section */}
                 <div className="w-full mt-24">
-                   <RiffLibrary theme={theme} category="all" />
+                   <RiffLibrary 
+                    theme={theme} 
+                    category="all" 
+                    onPlayRiff={handlePlayRiff}
+                    playingRiff={playingRiff}
+                   />
                 </div>
+
+                <div className="w-full">
+                  <FeedbackSection 
+                    theme={theme} 
+                    accentColor={settings.accentColor} 
+                  />
+                </div>
+              </motion.div>
+            )}
+
+            {activeView === 'theory' && (
+              <motion.div
+                key="theory"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+              >
+                <TheoryView 
+                  currentNote={pitchData?.note ?? null} 
+                  theme={theme} 
+                  accentColor={settings.accentColor} 
+                  isActive={isActive}
+                  onStartMic={start}
+                  onStopMic={stop}
+                  tunedStrings={tunedStrings}
+                  allStrings={getStrings()}
+                />
               </motion.div>
             )}
 
@@ -383,7 +644,11 @@ export default function App() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
               >
-                <RiffLibrary theme={theme} category={instrument} />
+                <RiffLibrary 
+                  theme={theme} 
+                  category={instrument} 
+                  onPlayRiff={handlePlayRiff}
+                />
               </motion.div>
             )}
           </AnimatePresence>
@@ -391,26 +656,27 @@ export default function App() {
 
         {/* Professional Bottom Navigation (iOS Style) */}
         <nav className={cn(
-          "fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 p-2 rounded-3xl border backdrop-blur-2xl z-50 transition-all shadow-2xl",
+          "fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-1 sm:gap-2 p-1.5 sm:p-2 rounded-3xl border backdrop-blur-2xl z-50 transition-all shadow-2xl max-w-[95vw] overflow-hidden",
           theme === 'dark' ? "bg-black/60 border-white/10" : "bg-white/80 border-black/10"
         )}>
           {[
-            { id: 'tuner', label: 'Tune Guitar', icon: Volume2 },
-            { id: 'metronome', label: 'Tempo', icon: Clock },
+            { id: 'tuner', label: 'Tuner', icon: Volume2 },
+            { id: 'theory', label: 'Theory', icon: Compass },
+            { id: 'metronome', label: 'Clock', icon: Clock },
             { id: 'riffs', label: 'Riffs', icon: LayoutGrid }
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveView(tab.id as any)}
               className={cn(
-                "relative flex flex-col items-center gap-1.5 px-6 py-3 rounded-2xl transition-all duration-300",
+                "relative flex flex-col items-center gap-1 px-3 sm:px-5 py-2 sm:py-3 rounded-2xl transition-all duration-300 group cursor-pointer hover:scale-105 active:scale-95",
                 activeView === tab.id 
                   ? "text-white" 
                   : theme === 'dark' ? "text-white/30 hover:text-white/60" : "text-black/30 hover:text-black/60"
               )}
             >
               <tab.icon size={20} className={cn(
-                "transition-transform",
+                "transition-transform duration-300 group-hover:scale-110",
                 activeView === tab.id ? "scale-110" : ""
               )} />
               <span className="text-[9px] uppercase tracking-widest font-black">{tab.label}</span>
@@ -424,7 +690,26 @@ export default function App() {
               )}
             </button>
           ))}
+          
+          <div className="w-px h-8 mx-1 opacity-10 bg-current" />
+
+          <button
+            onClick={() => setIsContactOpen(true)}
+            className={cn(
+              "relative flex flex-col items-center gap-1 px-3 sm:px-5 py-2 sm:py-3 rounded-2xl transition-all duration-300 group cursor-pointer hover:scale-105 active:scale-95",
+              theme === 'dark' ? "text-emerald-500/60 hover:text-emerald-400" : "text-emerald-600/60 hover:text-emerald-500"
+            )}
+          >
+            <MessageCircle size={20} className="transition-transform duration-300 group-hover:scale-110" />
+            <span className="text-[9px] uppercase tracking-widest font-black">Contact</span>
+          </button>
         </nav>
+        <ContactPopup 
+          isOpen={isContactOpen} 
+          onClose={() => setIsContactOpen(false)} 
+          theme={theme} 
+          accentColor={settings.accentColor} 
+        />
       </div>
 
       <footer className={cn(
@@ -442,5 +727,6 @@ export default function App() {
         </div>
       </footer>
     </div>
+    </>
   );
 }

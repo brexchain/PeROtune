@@ -1,10 +1,72 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Music, ArrowRight, Heart, Star } from 'lucide-react';
+import { Music, ArrowRight, Heart, Star, Play } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { RIFFS, InstrumentCategory } from '../constants';
+import { RIFFS, InstrumentCategory, Riff } from '../constants';
 
-export function RiffLibrary({ theme = 'dark', category = 'guitar' }: { theme?: 'dark' | 'light', category?: InstrumentCategory }) {
+const RhythmTimeline = ({ pattern, activeIndex, isPlaying }: { pattern: string, activeIndex: number, isPlaying: boolean }) => {
+  const tokens = pattern.replace(/\(Riff\)|\/|resonate/g, '').split(/\s+/).filter(t => t.trim().length > 0);
+  
+  const getNoteVal = (note: string) => {
+    const names = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    const match = note.match(/^([A-G][#b]?)/i);
+    if (!match) return -1;
+    let n = match[1].toUpperCase();
+    if (n === 'Db') n = 'C#';
+    if (n === 'Eb') n = 'D#';
+    if (n === 'Gb') n = 'F#';
+    if (n === 'Ab') n = 'G#';
+    if (n === 'Bb') n = 'A#';
+    return names.indexOf(n);
+  };
+
+  return (
+    <div className="flex gap-1.5 mt-3">
+      {tokens.map((token, i) => {
+        const isActive = isPlaying && activeIndex === i;
+        
+        // Calculate interval from previous note
+        let intervalLabel = "";
+        if (i > 0) {
+            const currentVal = getNoteVal(token);
+            const prevVal = getNoteVal(tokens[i-1]);
+            if (currentVal >= 0 && prevVal >= 0) {
+                const diff = Math.abs(currentVal - prevVal);
+                if (diff === 1 || diff === 11) intervalLabel = "H"; // Half-tone
+                if (diff === 2 || diff === 10) intervalLabel = "W"; // Whole-tone (Tone)
+            }
+        }
+
+        return (
+          <motion.div
+            key={i}
+            animate={{ 
+              scale: isActive ? [1, 1.3, 1] : 1,
+              backgroundColor: isActive ? '#10b981' : 'rgba(128, 128, 128, 0.2)',
+              opacity: isActive ? 1 : 0.4
+            }}
+            transition={{ duration: 0.3 }}
+            className="flex-1 h-3 rounded shadow-sm relative group flex items-center justify-center"
+          >
+             {intervalLabel && (
+               <span className="text-[6px] font-black text-white/40 absolute -bottom-3">{intervalLabel}</span>
+             )}
+             {isActive && (
+               <motion.div 
+                 layoutId="active-indicator"
+                 className="absolute -top-7 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-emerald-500 rounded text-[9px] font-black text-white whitespace-nowrap shadow-xl z-50 capitalize"
+               >
+                 {token}
+               </motion.div>
+             )}
+          </motion.div>
+        );
+      })}
+    </div>
+  );
+};
+
+export function RiffLibrary({ theme = 'dark', category = 'guitar', onPlayRiff, playingRiff }: { theme?: 'dark' | 'light', category?: InstrumentCategory | 'all', onPlayRiff?: (riff: Riff) => void, playingRiff?: { id: string, activeIndex: number } | null }) {
   const isDark = theme === 'dark';
   const [favorites, setFavorites] = useState<string[]>(() => {
     const saved = localStorage.getItem('perotuner-favorites');
@@ -104,13 +166,24 @@ export function RiffLibrary({ theme = 'dark', category = 'guitar' }: { theme?: '
                       onClick={(e) => toggleFlip(e, riff.id)}
                     >
                       {/* Front Side */}
-                      <div className="absolute inset-0 p-6 flex flex-col justify-between" style={{ backfaceVisibility: "hidden" }}>
-                        <div className="absolute top-0 right-0 p-4">
+                    <div className="absolute inset-0 p-6 flex flex-col justify-between" style={{ backfaceVisibility: "hidden" }}>
+                        <div className="absolute top-0 right-0 p-4 flex gap-2">
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // Toggle audio preview logic (to be handled via a prop or state)
+                              if (onPlayRiff) onPlayRiff(riff);
+                            }}
+                            className="p-2.5 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 transition-colors"
+                            title="Play Reference"
+                          >
+                            <Play size={18} />
+                          </button>
                           <button 
                             onClick={(e) => toggleFavorite(e, riff.id)}
                             className="p-2.5 rounded-full hover:bg-black/10 transition-colors"
                           >
-                            <Heart size={18} className="fill-emerald-500 text-emerald-500" />
+                            <Heart size={18} className={cn(favorites.includes(riff.id) ? "fill-emerald-500 text-emerald-500" : "text-emerald-500/40")} />
                           </button>
                         </div>
                         <div>
@@ -118,20 +191,34 @@ export function RiffLibrary({ theme = 'dark', category = 'guitar' }: { theme?: '
                             #{String(filteredRiffs.findIndex(r => r.id === riff.id) + 1).padStart(3, '0')}
                           </span>
                           <h4 className={cn(
-                            "text-xl font-bold mb-2 transition-colors",
+                            "text-xl font-bold mb-3 transition-colors",
                             isDark ? "text-white" : "text-black"
                           )}>{riff.title}</h4>
-                          <p className={cn(
-                            "text-xs leading-relaxed opacity-60 mb-3",
-                            isDark ? "text-white" : "text-black"
-                          )}>
-                            {riff.description}
-                          </p>
-                          {riff.chords && (
-                            <div className="text-[10px] font-bold text-emerald-500/70 uppercase tracking-widest mb-4">
-                              {riff.chords}
-                            </div>
-                          )}
+                          
+                          <div className="space-y-3 mb-6">
+                            {riff.nashvilleNumbers && (
+                              <div className="flex flex-col">
+                                <span className="text-[9px] uppercase tracking-widest text-emerald-500/40 font-black">Nashville Numbers</span>
+                                <span className={cn(
+                                  "text-2xl font-mono font-black italic tracking-tighter leading-none",
+                                  isDark ? "text-emerald-400" : "text-emerald-600"
+                                )}>
+                                  {riff.nashvilleNumbers}
+                                </span>
+                              </div>
+                            )}
+                            {riff.chords && (
+                              <div className="flex flex-col">
+                                <span className="text-[9px] uppercase tracking-widest text-white/20 font-black">Progression</span>
+                                <span className={cn(
+                                  "text-lg font-black tracking-tight leading-tight",
+                                  isDark ? "text-white/90" : "text-black/90"
+                                )}>
+                                  {riff.chords}
+                                </span>
+                              </div>
+                            )}
+                          </div>
                         </div>
                         <div className={cn(
                           "inline-flex px-4 py-2 rounded-xl border border-emerald-500/20 bg-emerald-500/10 self-start"
@@ -143,16 +230,33 @@ export function RiffLibrary({ theme = 'dark', category = 'guitar' }: { theme?: '
                       </div>
 
                       {/* Back Side */}
-                      <div className="absolute inset-0 p-8 flex flex-col items-center justify-center text-center bg-emerald-950/90" style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}>
-                        <Music className="text-emerald-400 mb-4" size={32} />
-                        <h4 className="text-emerald-400 text-xs font-black uppercase tracking-widest mb-2">Famous Refrain</h4>
-                        <p className="text-white text-lg font-medium italic leading-tight">
-                          "{riff.refrain || riff.description}"
-                        </p>
-                        <div className="mt-6 flex gap-2">
-                           <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/40" />
-                           <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/40" />
-                           <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/40" />
+                      <div className="absolute inset-0 p-8 flex flex-col items-center justify-center text-center bg-emerald-950/95" style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}>
+                        <div className="absolute top-4 left-4">
+                           <Star size={16} className="text-amber-400 fill-amber-400 opacity-30" />
+                        </div>
+                        
+                        <div className="flex flex-col gap-5 w-full">
+                          {riff.refrain && (
+                            <div className="space-y-1">
+                              <span className="text-[9px] uppercase tracking-[0.4em] text-emerald-500/40 font-black">Lyric Refrain</span>
+                              <p className="text-lg font-black italic text-white leading-tight underline decoration-emerald-500/30 underline-offset-4">
+                                "{riff.refrain}"
+                              </p>
+                            </div>
+                          )}
+                          
+                          <div className="space-y-1">
+                            <span className="text-[9px] uppercase tracking-[0.4em] text-emerald-500/40 font-black">Focus Tip</span>
+                            <p className="text-xs text-white/60 leading-relaxed font-medium px-4">
+                              {riff.description}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="absolute bottom-6 flex gap-2">
+                           <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/20" />
+                           <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/60 animate-pulse" />
+                           <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/20" />
                         </div>
                       </div>
                     </motion.div>
@@ -178,7 +282,7 @@ export function RiffLibrary({ theme = 'dark', category = 'guitar' }: { theme?: '
           ref={containerRef}
           className="flex gap-4 overflow-x-auto pb-10 scrollbar-none snap-x snap-mandatory px-0.5"
         >
-          {pagedRiffs.map((riff) => {
+          {filteredRiffs.map((riff) => {
              const isFlipped = flippedIds.includes(riff.id);
              return (
               <div key={`container-${riff.id}`} style={{ perspective: "1000px" }}>
@@ -191,7 +295,7 @@ export function RiffLibrary({ theme = 'dark', category = 'guitar' }: { theme?: '
                   transition={{ type: "spring", stiffness: 260, damping: 20 }}
                   style={{ transformStyle: "preserve-3d" }}
                   className={cn(
-                    "group min-w-[320px] sm:min-w-[380px] h-[340px] rounded-[2rem] border transition-all cursor-pointer flex flex-col justify-between snap-center relative",
+                    "group min-w-[320px] sm:min-w-[380px] h-[360px] rounded-[2rem] border transition-all cursor-pointer flex flex-col justify-between snap-center relative",
                     isDark 
                       ? "bg-white/[0.03] border-white/5 hover:bg-white/[0.06] hover:border-white/10" 
                       : "bg-black/[0.03] border-black/5 hover:bg-black/[0.06] hover:border-black/10 shadow-lg"
@@ -200,7 +304,17 @@ export function RiffLibrary({ theme = 'dark', category = 'guitar' }: { theme?: '
                 >
                   {/* Front Side */}
                   <div className="absolute inset-0 p-8 flex flex-col justify-between" style={{ backfaceVisibility: "hidden" }}>
-                    <div className="absolute top-6 right-6 z-10">
+                    <div className="absolute top-6 right-6 z-10 flex gap-2">
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (onPlayRiff) onPlayRiff(riff);
+                        }}
+                        className="p-3 rounded-2xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 transition-all duration-300"
+                        title="Play Preview"
+                      >
+                        <Play size={20} />
+                      </button>
                       <button 
                         onClick={(e) => toggleFavorite(e, riff.id)}
                         className={cn(
@@ -224,27 +338,43 @@ export function RiffLibrary({ theme = 'dark', category = 'guitar' }: { theme?: '
                           isDark ? "text-white" : "text-black"
                         )}>{riff.title}</h4>
                       </div>
+
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {riff.chords && (
+                          <div className="px-3 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-black text-emerald-500 uppercase tracking-wider">
+                            {riff.chords}
+                          </div>
+                        )}
+                        {riff.nashvilleNumbers && (
+                          <div className="px-3 py-1 rounded-lg bg-white/5 border border-white/10 text-[10px] font-mono text-white/40">
+                            {riff.nashvilleNumbers}
+                          </div>
+                        )}
+                      </div>
+
                       <p className={cn(
-                        "text-sm leading-relaxed transition-colors mb-4",
+                        "text-sm leading-relaxed transition-colors mb-4 line-clamp-2",
                         isDark ? "text-white/40" : "text-black/50"
                       )}>
                         {riff.description}
                       </p>
-                      {riff.chords && (
-                        <div className="text-xs font-bold text-emerald-500/70 uppercase tracking-[0.2em]">
-                          {riff.chords}
-                        </div>
-                      )}
                     </div>
 
                     <div className="flex items-center justify-between mt-auto">
-                      <div className={cn(
-                        "inline-flex px-5 py-2.5 rounded-2xl border transition-colors",
-                        isDark ? "bg-black/40 border-white/5" : "bg-white border-black/5 shadow-md"
-                      )}>
-                        <span className="text-xs font-mono text-emerald-400 tracking-[0.2em] uppercase font-black">
-                          {riff.pattern}
-                        </span>
+                      <div className="flex flex-col gap-1 flex-1 pr-4">
+                        <div className={cn(
+                          "inline-flex px-4 py-2 rounded-2xl border transition-colors self-start",
+                          isDark ? "bg-black/40 border-white/5" : "bg-white border-black/5 shadow-md"
+                        )}>
+                          <span className="text-[10px] font-mono text-emerald-400 tracking-[0.2em] uppercase font-black">
+                            {riff.pattern}
+                          </span>
+                        </div>
+                        <RhythmTimeline 
+                          pattern={riff.pattern} 
+                          activeIndex={playingRiff?.activeIndex ?? 0} 
+                          isPlaying={playingRiff?.id === riff.id} 
+                        />
                       </div>
                       <div className={cn(
                         "p-3 rounded-full transition-colors",
@@ -258,22 +388,31 @@ export function RiffLibrary({ theme = 'dark', category = 'guitar' }: { theme?: '
                   {/* Back Side */}
                   <div className={cn(
                     "absolute inset-0 p-10 flex flex-col items-center justify-center text-center rounded-[2rem]",
-                    isDark ? "bg-emerald-950/95" : "bg-white/95 border border-emerald-500/20"
+                    isDark ? "bg-emerald-950/95" : "bg-emerald-900 border border-emerald-500/20 shadow-2xl"
                   )} style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}>
                     <div className="absolute top-8 left-8 opacity-20">
                       <Music className="text-emerald-400" size={40} />
                     </div>
-                    <div className="max-w-[240px]">
-                      <h4 className="text-emerald-400 text-xs font-black uppercase tracking-[0.4em] mb-6">Famous Refrain</h4>
-                      <p className={cn(
-                        "text-xl sm:text-2xl font-black italic underline decoration-emerald-500/30 underline-offset-8 leading-tight",
-                        isDark ? "text-white" : "text-black"
-                      )}>
-                        "{riff.refrain || riff.description}"
-                      </p>
+                    
+                    <div className="flex flex-col gap-8 max-w-[280px]">
+                      {riff.refrain ? (
+                        <div className="space-y-2">
+                          <h4 className="text-emerald-400 text-[10px] font-black uppercase tracking-[0.4em]">Lyric Refrain</h4>
+                          <p className="text-xl sm:text-2xl font-black italic underline decoration-emerald-500/30 underline-offset-8 leading-tight text-white">
+                            "{riff.refrain}"
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                           <Music className="text-white/20 mx-auto" size={48} />
+                           <p className="text-lg font-bold text-white/70 italic">"{riff.description}"</p>
+                        </div>
+                      )}
                     </div>
-                    <div className="mt-12 group-hover:rotate-12 transition-transform">
+
+                    <div className="mt-8 flex gap-3">
                        <ArrowRight className="text-emerald-500/50 rotate-180" size={24} />
+                       <span className="text-[10px] uppercase tracking-widest font-black text-white/20">tap to return</span>
                     </div>
                   </div>
                 </motion.div>
@@ -297,6 +436,144 @@ export function RiffLibrary({ theme = 'dark', category = 'guitar' }: { theme?: '
           )}
         </div>
       </div>
+
+      {/* Vertical Global Library Section */}
+      <motion.div 
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        className="px-6 mt-12 pb-20"
+      >
+        <div className="flex items-center justify-between mb-8">
+           <div>
+              <h3 className={cn(
+                "text-2xl font-black italic uppercase tracking-wider mb-1 transition-colors",
+                isDark ? "text-white" : "text-black"
+              )}>Explore All Riffs</h3>
+              <p className={cn("text-[10px] uppercase tracking-[0.3em] font-bold opacity-40", isDark ? "text-white" : "text-black")}>
+                Full {category === 'all' ? 'Studio' : category} Collection
+              </p>
+           </div>
+           <div className={cn(
+             "px-4 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-widest",
+             isDark ? "bg-white/5 border-white/10 text-white/40" : "bg-black/5 border-black/10 text-black/40"
+           )}>
+             {filteredRiffs.length} Items
+           </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredRiffs.map((riff, idx) => {
+            const isFlipped = flippedIds.includes(riff.id);
+            return (
+              <div key={`vertical-${riff.id}`} style={{ perspective: "1000px" }}>
+                <motion.div
+                  animate={{ rotateY: isFlipped ? 180 : 0 }}
+                  transition={{ type: "spring", stiffness: 260, damping: 20 }}
+                  style={{ transformStyle: "preserve-3d" }}
+                  className={cn(
+                    "group relative h-[320px] rounded-3xl border transition-all cursor-pointer",
+                    isDark 
+                      ? "bg-white/[0.02] border-white/5 hover:bg-white/[0.05]" 
+                      : "bg-white border-black/5 hover:shadow-xl"
+                  )}
+                  onClick={(e) => toggleFlip(e, riff.id)}
+                >
+                  {/* Front */}
+                  <div className="absolute inset-0 p-6 flex flex-col justify-between" style={{ backfaceVisibility: "hidden" }}>
+                    <div className="absolute top-4 right-4 flex gap-2">
+                       <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (onPlayRiff) onPlayRiff(riff);
+                        }}
+                        className="p-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 transition-colors"
+                       >
+                         <Play size={14} />
+                       </button>
+                       <button 
+                        onClick={(e) => toggleFavorite(e, riff.id)}
+                        className={cn(
+                          "p-2 rounded-xl border transition-all",
+                          favorites.includes(riff.id) 
+                            ? "bg-emerald-500/20 border-emerald-500/20 text-emerald-500" 
+                            : isDark ? "bg-white/5 border-white/5 text-white/20" : "bg-black/5 border-black/5 text-black/20"
+                        )}
+                       >
+                         <Heart size={14} className={cn(favorites.includes(riff.id) && "fill-current")} />
+                       </button>
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-mono text-emerald-500/50 mb-1 block">#{String(idx + 1).padStart(3, '0')}</span>
+                      <h4 className={cn("text-xl font-black tracking-tight mb-3", isDark ? "text-white" : "text-black")}>
+                        {riff.title}
+                      </h4>
+                      
+                      <div className="space-y-3 mb-6">
+                        {riff.nashvilleNumbers && (
+                          <div className="flex flex-col">
+                             <span className="text-[9px] uppercase tracking-widest text-emerald-500/40 font-black">Nashville</span>
+                             <span className="text-xl font-mono font-black italic text-emerald-400 tracking-tighter line-clamp-1 leading-none">{riff.nashvilleNumbers}</span>
+                          </div>
+                        )}
+                        {riff.chords && (
+                          <div className="flex flex-col">
+                             <span className="text-[9px] uppercase tracking-widest text-white/20 font-black">Progression</span>
+                             <span className="text-base font-black text-white/80 line-clamp-1 leading-tight">{riff.chords}</span>
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-xs text-white/30 line-clamp-1 leading-relaxed italic">{riff.description}</p>
+                    </div>
+                    <div className="flex items-center justify-between">
+                       <div className="flex-1 pr-3">
+                          <div className="px-3 py-1.5 rounded-lg border border-white/5 bg-white/5 text-[10px] font-black font-mono text-emerald-400 self-start inline-block">
+                            {riff.pattern}
+                          </div>
+                          <RhythmTimeline 
+                            pattern={riff.pattern} 
+                            activeIndex={playingRiff?.activeIndex ?? 0} 
+                            isPlaying={playingRiff?.id === riff.id} 
+                          />
+                       </div>
+                       <ArrowRight size={14} className="text-white/20 group-hover:text-emerald-400 transition-colors" />
+                    </div>
+                  </div>
+
+                  {/* Back */}
+                  <div className={cn(
+                    "absolute inset-0 p-6 flex flex-col items-center justify-center text-center rounded-3xl",
+                    isDark ? "bg-emerald-950/95" : "bg-emerald-900 shadow-2xl"
+                  )} style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}>
+                    <div className="flex flex-col gap-4 w-full">
+                       {riff.refrain && (
+                         <div className="space-y-1">
+                           <span className="text-[8px] uppercase tracking-[0.3em] text-emerald-500/40 font-black">Refrain Hook</span>
+                           <p className="text-base font-black italic text-white leading-tight underline decoration-emerald-500/30 underline-offset-4">
+                             "{riff.refrain}"
+                           </p>
+                         </div>
+                       )}
+                       <div className="space-y-1">
+                          <span className="text-[8px] uppercase tracking-[0.3em] text-emerald-500/40 font-black">Guitarist Tip</span>
+                          <p className="text-xs font-bold text-white/40 leading-snug px-2">"{riff.description}"</p>
+                       </div>
+                    </div>
+                    <div className="absolute bottom-6 pt-4 border-t border-white/5 w-[80%]">
+                       <span className="text-[8px] font-mono text-white/10 uppercase tracking-widest leading-none">Reference Ready</span>
+                    </div>
+                  </div>
+                </motion.div>
+              </div>
+            );
+          })}
+        </div>
+      </motion.div>
+      
+      {/* Scroll Sentinel */}
+      {visibleCount < filteredRiffs.length && (
+        <div ref={sentinelRef} className="h-10 w-full" />
+      )}
     </div>
   );
 }

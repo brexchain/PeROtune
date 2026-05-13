@@ -13,12 +13,14 @@ export function ToneReference({
   referenceA, 
   theme = 'dark', 
   notes,
-  accentColor = '#10b981'
+  accentColor = '#10b981',
+  onNoteTrigger
 }: { 
   referenceA: number, 
   theme?: 'dark' | 'light',
   notes: ReferenceNote[],
-  accentColor?: string
+  accentColor?: string,
+  onNoteTrigger?: (note: string | null) => void
 }) {
   const audioCtxRef = useRef<AudioContext | null>(null);
   const [playingNote, setPlayingNote] = useState<string | null>(null);
@@ -39,6 +41,7 @@ export function ToneReference({
 
     const uniqueId = label ? `${note}-${label}` : note;
     setPlayingNote(uniqueId);
+    if (onNoteTrigger) onNoteTrigger(note);
     
     // Create oscillator
     const osc = ctx.createOscillator();
@@ -59,6 +62,7 @@ export function ToneReference({
 
     setTimeout(() => {
       setPlayingNote(prev => prev === uniqueId ? null : prev);
+      if (onNoteTrigger) onNoteTrigger(null);
     }, 2500);
   };
 

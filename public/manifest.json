@@ -1,0 +1,17 @@
+{
+  "name": "PeROtuner Pro",
+  "short_name": "PeROtuner",
+  "description": "Professional Studio Guitar Tuner & Harmonic Engine",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "icons": [
+    {
+      "src": "https://img.icons8.com/ios-filled/512/000000/guitar-head.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
