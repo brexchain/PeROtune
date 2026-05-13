@@ -6,6 +6,27 @@ import { cn } from '../lib/utils';
 import { InstrumentCategory } from '../constants';
 
 import { GuitarStringsBackground } from './GuitarStringsBackground';
+import { useLanguage } from '../lib/i18n';
+
+interface Dot {
+  s: number;
+  f: number;
+  root?: boolean;
+  special?: boolean;
+}
+
+interface Shape {
+  id: number;
+  name: string;
+  description: string;
+  dots: Dot[];
+}
+
+interface Hint {
+  title: string;
+  desc: string;
+  dots: Dot[];
+}
 
 interface TheoryViewProps {
   currentNote: string | null;
@@ -19,123 +40,6 @@ interface TheoryViewProps {
   allStrings: { label: string; freq: number; note: string }[];
 }
 
-const PENTATONIC_SHAPES = [
-  { 
-    id: 1, 
-    name: "Pattern 1 (The Home Base)", 
-    description: "The 'Old Reliable'. Everyone starts here. Root note is on the low E string.",
-    dots: [
-      { s: 0, f: 0, root: true }, { s: 0, f: 3 },
-      { s: 1, f: 0 }, { s: 1, f: 2 },
-      { s: 2, f: 0 }, { s: 2, f: 2 },
-      { s: 3, f: 0 }, { s: 3, f: 2 },
-      { s: 4, f: 0 }, { s: 4, f: 3 },
-      { s: 5, f: 0, root: true }, { s: 5, f: 3 }
-    ]
-  },
-  { 
-    id: 2, 
-    name: "Pattern 2 (The Upper Extension)", 
-    description: "The 'Sweet Spot'. Slide up from Pattern 1 to reach these melodic high notes.",
-    dots: [
-      { s: 0, f: 0 }, { s: 0, f: 2 },
-      { s: 1, f: 0 }, { s: 1, f: 2 },
-      { s: 2, f: 0, root: true }, { s: 2, f: 2 },
-      { s: 3, f: -1 }, { s: 3, f: 1 },
-      { s: 4, f: 0, root: true }, { s: 4, f: 2 },
-      { s: 5, f: 0 }, { s: 5, f: 2 }
-    ]
-  },
-  { 
-    id: 3, 
-    name: "Pattern 3 (The B-String Slide)", 
-    description: "The 'Funny Shape'. Watch the shift on the B-string. Great for diagonal runs.",
-    dots: [
-      { s: 0, f: 0 }, { s: 0, f: 3 },
-      { s: 1, f: 0 }, { s: 1, f: 2 },
-      { s: 2, f: 0 }, { s: 2, f: 2 },
-      { s: 3, f: 0, root: true }, { s: 3, f: 2 },
-      { s: 4, f: 0 }, { s: 4, f: 3 },
-      { s: 5, f: 0 }, { s: 5, f: 3, root: true }
-    ]
-  },
-  { 
-    id: 4, 
-    name: "Pattern 4 (The High Box)", 
-    description: "The 'Root on A' shape. Very stable and great for bending on the G-string.",
-    dots: [
-      { s: 0, f: 0 }, { s: 0, f: 2 },
-      { s: 1, f: 0, root: true }, { s: 1, f: 3 },
-      { s: 2, f: 0 }, { s: 2, f: 2 },
-      { s: 3, f: 0 }, { s: 3, f: 2 },
-      { s: 4, f: 0, root: true }, { s: 4, f: 3 },
-      { s: 5, f: 0 }, { s: 5, f: 2 }
-    ]
-  },
-  { 
-    id: 5, 
-    name: "Pattern 5 (The D-Shape Connector)", 
-    description: "The 'Staircase'. Connects the high register back down to Pattern 1.",
-    dots: [
-      { s: 0, f: 0, root: true }, { s: 0, f: 3 },
-      { s: 1, f: 0 }, { s: 1, f: 3 },
-      { s: 2, f: 0 }, { s: 2, f: 2 },
-      { s: 3, f: 0, root: true }, { s: 3, f: 2 },
-      { s: 4, f: 0 }, { s: 4, f: 2 },
-      { s: 5, f: 0, root: true }, { s: 5, f: 3 }
-    ]
-  }
-];
-
-const SOLOING_HINTS = [
-  { 
-    title: "The Clapton House", 
-    desc: "The 'Melodic Highs'. Found on the three thinnest strings. It looks like a house with a roof, ideal for soulful vibrato.",
-    dots: [
-      { s: 0, f: 0, special: true }, { s: 0, f: 3, special: true },
-      { s: 1, f: 1, root: true, special: true }, { s: 1, f: 3, special: true },
-      { s: 2, f: 0, special: true }, { s: 2, f: 2, special: true }
-    ]
-  },
-  {
-    title: "BB King's Magic Box",
-    desc: "Rooted on the B-string. Always slide into it. It's the 'Sweet Spot' for that signature BB sting and vibrato.",
-    dots: [
-      { s: 0, f: 2, special: true }, { s: 0, f: 4, special: true },
-      { s: 1, f: 2, root: true, special: true }, { s: 1, f: 4, special: true },
-      { s: 2, f: 3, special: true }
-    ]
-  },
-  {
-    title: "Hendrix Thumb Root",
-    desc: "The 'Coolest Hand in Rock'. Wrap your thumb over the top for the root, leaving your fingers free for melodic fills.",
-    dots: [
-      { s: 5, f: 0, root: true, special: true },
-      { s: 3, f: 0, special: true }, { s: 3, f: 2, special: true },
-      { s: 2, f: 0, special: true }, { s: 2, f: 2, special: true },
-      { s: 1, f: 0, special: true }, { s: 1, f: 2, special: true }
-    ]
-  },
-  {
-    title: "SRV Texas Slide",
-    desc: "Vicious diagonal movement. Use this to travel between boxes 1 and 2 with high energy and speed.",
-    dots: [
-      { s: 5, f: 0, root: true }, { s: 5, f: 3 },
-      { s: 4, f: 0 }, { s: 4, f: 2 },
-      { s: 3, f: 0, special: true }, { s: 3, f: 2 }, { s: 3, f: 4, special: true }
-    ]
-  },
-  {
-    title: "Albert King Bend Zone",
-    desc: "Maximum Tension. This is where you pull off those massive 2-step blues bends that scream.",
-    dots: [
-      { s: 0, f: 0, root: true }, { s: 0, f: 3, special: true },
-      { s: 1, f: 0 }, { s: 1, f: 3, special: true },
-      { s: 2, f: 0 }, { s: 2, f: 2, special: true }
-    ]
-  }
-];
-
 export function TheoryView({ 
   currentNote, 
   theme, 
@@ -147,10 +51,139 @@ export function TheoryView({
   tunedStrings,
   allStrings
 }: TheoryViewProps) {
+  const { t } = useLanguage();
   const isDark = theme === 'dark';
   const [activeShape, setActiveShape] = React.useState(0);
   const [viewMode, setViewMode] = React.useState<'patterns' | 'blueprints'>('patterns');
   const [activeBlueprint, setActiveBlueprint] = React.useState(0);
+
+  const PENTATONIC_SHAPES: Shape[] = [
+    { 
+      id: 1, 
+      name: t('p1Name'), 
+      description: t('p1Desc'),
+      dots: [
+        { s: 0, f: 0, root: true }, { s: 0, f: 3 },
+        { s: 1, f: 0 }, { s: 1, f: 2 },
+        { s: 2, f: 0 }, { s: 2, f: 2 },
+        { s: 3, f: 0 }, { s: 3, f: 2 },
+        { s: 4, f: 0 }, { s: 4, f: 3 },
+        { s: 5, f: 0, root: true }, { s: 5, f: 3 }
+      ]
+    },
+    { 
+      id: 2, 
+      name: t('p2Name'), 
+      description: t('p2Desc'),
+      dots: [
+        { s: 0, f: 0 }, { s: 0, f: 2 },
+        { s: 1, f: 0 }, { s: 1, f: 2 },
+        { s: 2, f: 0, root: true }, { s: 2, f: 2 },
+        { s: 3, f: -1 }, { s: 3, f: 1 },
+        { s: 4, f: 0, root: true }, { s: 4, f: 2 },
+        { s: 5, f: 0 }, { s: 5, f: 2 }
+      ]
+    },
+    { 
+      id: 3, 
+      name: t('p3Name'), 
+      description: t('p3Desc'),
+      dots: [
+        { s: 0, f: 0 }, { s: 0, f: 3 },
+        { s: 1, f: 0 }, { s: 1, f: 2 },
+        { s: 2, f: 0 }, { s: 2, f: 2 },
+        { s: 3, f: 0, root: true }, { s: 3, f: 2 },
+        { s: 4, f: 0 }, { s: 4, f: 3 },
+        { s: 5, f: 0 }, { s: 5, f: 3, root: true }
+      ]
+    },
+    { 
+      id: 4, 
+      name: t('p4Name'), 
+      description: t('p4Desc'),
+      dots: [
+        { s: 0, f: 0 }, { s: 0, f: 2 },
+        { s: 1, f: 0, root: true }, { s: 1, f: 3 },
+        { s: 2, f: 0 }, { s: 2, f: 2 },
+        { s: 3, f: 0 }, { s: 3, f: 2 },
+        { s: 4, f: 0, root: true }, { s: 4, f: 3 },
+        { s: 5, f: 0 }, { s: 5, f: 2 }
+      ]
+    },
+    { 
+      id: 5, 
+      name: t('p5Name'), 
+      description: t('p5Desc'),
+      dots: [
+        { s: 0, f: 0, root: true }, { s: 0, f: 3 },
+        { s: 1, f: 0 }, { s: 1, f: 3 },
+        { s: 2, f: 0 }, { s: 2, f: 2 },
+        { s: 3, f: 0, root: true }, { s: 3, f: 2 },
+        { s: 4, f: 0 }, { s: 4, f: 2 },
+        { s: 5, f: 0, root: true }, { s: 5, f: 3 }
+      ]
+    }
+  ];
+
+  const SOLOING_HINTS: Hint[] = [
+    { 
+      title: t('h1Title'), 
+      desc: t('h1Desc'),
+      dots: [
+        { s: 2, f: 0, special: true }, // G string
+        { s: 1, f: 1, root: true, special: true }, // B string
+        { s: 0, f: 0, special: true }, // e string
+        { s: 0, f: 3, special: true }, // roof
+        { s: 1, f: 3, special: true }, // bend
+      ]
+    },
+    {
+      title: t('h2Title'),
+      desc: t('h2Desc'),
+      dots: [
+        { s: 2, f: 2, special: true },
+        { s: 1, f: 3, root: true, special: true },
+        { s: 1, f: 5, special: true },
+        { s: 0, f: 3, special: true },
+        { s: 0, f: 5, special: true }
+      ]
+    },
+    {
+      title: t('h3Title'),
+      desc: t('h3Desc'),
+      dots: [
+        { s: 5, f: 0, root: true, special: true }, 
+        { s: 3, f: 2, special: true },
+        { s: 2, f: 1, special: true },
+        { s: 1, f: 0, special: true },
+        { s: 0, f: 0, special: true }
+      ]
+    },
+    {
+      title: t('h4Title'),
+      desc: t('h4Desc'),
+      dots: [
+        { s: 4, f: 2, special: true },
+        { s: 3, f: 0, special: true },
+        { s: 3, f: 2, special: true },
+        { s: 2, f: 0, special: true },
+        { s: 2, f: 2, special: true },
+        { s: 1, f: 0, special: true },
+        { s: 1, f: 3, root: true, special: true }
+      ]
+    },
+    {
+      title: t('h5Title'),
+      desc: t('h5Desc'),
+      dots: [
+        { s: 2, f: 2, special: true },
+        { s: 1, f: 1, special: true },
+        { s: 1, f: 3, special: true },
+        { s: 0, f: 3, special: true },
+        { s: 0, f: 5, root: true, special: true }
+      ]
+    }
+  ];
 
   const activeDots = viewMode === 'patterns' 
     ? (PENTATONIC_SHAPES[activeShape]?.dots || [])
@@ -158,8 +191,13 @@ export function TheoryView({
 
   const handleSetViewMode = (mode: 'patterns' | 'blueprints') => {
     setViewMode(mode);
-    if (mode === 'patterns' && activeShape === -1) setActiveShape(0);
-    if (mode === 'blueprints' && activeBlueprint === -1) setActiveBlueprint(0);
+    if (mode === 'patterns') {
+      setActiveShape(0);
+      setActiveBlueprint(-1);
+    } else {
+      setActiveBlueprint(0);
+      setActiveShape(-1);
+    }
   };
 
   return (
@@ -172,10 +210,10 @@ export function TheoryView({
 
 
       <div className="flex flex-col items-center gap-2 relative z-10">
-        <h2 className="text-3xl font-black tracking-tighter uppercase italic">Harmonic Engine</h2>
+        <h2 className="text-3xl font-black tracking-tighter uppercase italic">{t('harmonicEngine')}</h2>
         <div className="flex items-center gap-4">
            <div className="h-px w-8 bg-current opacity-10" />
-           <p className="text-[10px] uppercase tracking-[0.4em] opacity-40 font-bold">Circle of Fifths & Soloing Blueprints</p>
+           <p className="text-[10px] uppercase tracking-[0.4em] opacity-40 font-bold">{t('circleOfFifths')}</p>
            <div className="h-px w-8 bg-current opacity-10" />
         </div>
       </div>
@@ -219,16 +257,16 @@ export function TheoryView({
                    </motion.div>
                 </button>
                 <div>
-                   <h4 className="text-[10px] font-black uppercase tracking-widest opacity-40">Nashville Sensor</h4>
+                   <h4 className="text-[10px] font-black uppercase tracking-widest opacity-40">{t('nashvilleSensor')}</h4>
                    <p className="text-sm font-bold tracking-tight">
-                      {isActive ? (currentNote ? `Current 1: ${currentNote}` : "Listening for strings...") : "Sensor Offline"}
+                      {isActive ? (currentNote ? `Current 1: ${currentNote}` : t('listeningForStrings')) : t('sensorOffline')}
                    </p>
                    {!isActive && (
                       <button 
                         onClick={onStartMic}
                         className="text-[9px] uppercase font-bold text-emerald-500 hover:underline mt-1"
                       >
-                        Click to activate mic
+                        {t('activateMic')}
                       </button>
                    )}
                 </div>
@@ -237,7 +275,7 @@ export function TheoryView({
              {/* Chord Recognition Suggestion */}
              {currentNote && (
                 <div className="flex flex-col items-end">
-                   <span className="text-[8px] uppercase tracking-widest opacity-40 font-black mb-1">Scale Anchor</span>
+                   <span className="text-[8px] uppercase tracking-widest opacity-40 font-black mb-1">{t('scaleAnchor')}</span>
                    <div className="flex gap-1.5">
                       <div className="px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-black text-emerald-500">
                          {currentNote} MAJOR
@@ -289,16 +327,16 @@ export function TheoryView({
 
           <h3 className="text-sm font-black uppercase tracking-widest mb-4 flex items-center gap-2">
              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: accentColor }} />
-             Nashville Family
+             {t('nashvilleFamily')}
           </h3>
           <p className="text-[11px] opacity-60 leading-relaxed mb-8">
-            Nashville Numbers allow you to transpose songs instantly. 1-4-5 is the backbone of western music.
+            {t('nashvilleNumbersDesc')}
           </p>
           
           <div className="space-y-3 mt-auto">
              {currentNote ? (
                  <div className="grid grid-cols-3 gap-y-6 gap-x-4">
-                    <FamilyMember label="1 (Root)" note={getRelativeNote(currentNote, 0)} accentColor={accentColor} onClick={() => onPlayNote(`${getRelativeNote(currentNote, 0)}3`)} />
+                    <FamilyMember label={t('rootLabel')} note={getRelativeNote(currentNote, 0)} accentColor={accentColor} onClick={() => onPlayNote(`${getRelativeNote(currentNote, 0)}3`)} />
                     <FamilyMember label="4 (IV)" note={getRelativeNote(currentNote, -1)} accentColor={accentColor} onClick={() => onPlayNote(`${getRelativeNote(currentNote, -1)}3`)} />
                     <FamilyMember label="5 (V)" note={getRelativeNote(currentNote, 1)} accentColor={accentColor} onClick={() => onPlayNote(`${getRelativeNote(currentNote, 1)}3`)} />
                     <FamilyMember label="6m (vi)" note={getRelativeNote(currentNote, 0, true)} accentColor={accentColor} onClick={() => onPlayNote(`${getRelativeNote(currentNote, 0, true).replace('m', '')}3`)} />
@@ -308,7 +346,7 @@ export function TheoryView({
              ) : (
                  <div className="h-32 flex flex-col items-center justify-center border-2 border-dashed border-white/5 rounded-[2rem] gap-3">
                     <Volume2 size={24} className="opacity-10" />
-                    <span className="text-[9px] uppercase tracking-[0.2em] opacity-20 font-bold text-center px-4">Detected note will trigger numeric mapping</span>
+                    <span className="text-[9px] uppercase tracking-[0.2em] opacity-20 font-bold text-center px-4">{t('detectedNoteMapping')}</span>
                  </div>
              )}
           </div>
@@ -321,17 +359,17 @@ export function TheoryView({
         )}>
           <h3 className="text-sm font-black uppercase tracking-widest mb-4 flex items-center gap-2">
              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: accentColor }} />
-             Nashville Logic
+             {t('nashvilleLogic')}
           </h3>
           <p className="text-[11px] opacity-60 leading-relaxed mb-6">
-            Pro guitarists think in numbers to keep the 'groove' consistent across different keys.
+            {t('nashvilleLogicDesc')}
           </p>
           
           <div className="grid grid-cols-2 gap-3 mt-auto">
-             <TheoryChip title="Rock Base" desc="1 - 4 - 5 - 4" />
-             <TheoryChip title="Pop Cycle" desc="1 - 5 - 6m - 4" />
-             <TheoryChip title="Turnaround" desc="2m - 5 - 1" />
-             <TheoryChip title="Soul" desc="1 - 6m - 2 - 5" />
+             <TheoryChip title={t('rockBase')} desc="1 - 4 - 5 - 4" />
+             <TheoryChip title={t('popCycle')} desc="1 - 5 - 6m - 4" />
+             <TheoryChip title={t('turnaround')} desc="2m - 5 - 1" />
+             <TheoryChip title={t('soul')} desc="1 - 6m - 2 - 5" />
           </div>
         </div>
 
@@ -342,22 +380,22 @@ export function TheoryView({
         )}>
           <h3 className="text-sm font-black uppercase tracking-widest mb-4 flex items-center gap-2">
              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: accentColor }} />
-             CAGED Blueprint
+             {t('cagedBlueprint')}
           </h3>
           <p className="text-[11px] opacity-60 leading-relaxed mb-6">
-            Everything on guitar is a movable shape. C-A-G-E-D connects the neck into one giant playground.
+            {t('cagedDesc')}
           </p>
           
           <div className="space-y-2 mt-auto">
             <div className="flex justify-between items-center bg-white/5 p-3 rounded-2xl border border-white/5">
-              <span className="text-[10px] font-black uppercase italic">Movable Grid</span>
+              <span className="text-[10px] font-black uppercase italic">{t('movableGrid')}</span>
               <div className="flex gap-1">
                 {['C','A','G','E','D'].map(l => (
                   <span key={l} className="w-6 h-6 flex items-center justify-center rounded-lg bg-emerald-500/10 text-[10px] font-bold text-emerald-500">{l}</span>
                 ))}
               </div>
             </div>
-            <p className="text-[9px] opacity-40 leading-tight">Identify the root of any open chord and slide it relative to the nut.</p>
+            <p className="text-[9px] opacity-40 leading-tight">{t('cagedHint')}</p>
           </div>
         </div>
       </div>
@@ -370,13 +408,13 @@ export function TheoryView({
         )}>
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
              <div className="max-w-md">
-                <h3 className="text-3xl font-black uppercase tracking-tighter italic mb-2">Soloing Blueprint</h3>
-                <p className="text-xs opacity-50 font-bold uppercase tracking-widest mb-4">Learn the visual architecture of the neck</p>
+                <h3 className="text-3xl font-black uppercase tracking-tighter italic mb-2">{t('soloBlueprint')}</h3>
+                <p className="text-xs opacity-50 font-bold uppercase tracking-widest mb-4">{t('visualArchitecture')}</p>
                 
                 <p className="text-sm leading-relaxed opacity-70 mb-6">
                   {viewMode === 'patterns' 
-                    ? "The Pentatonic Box is your 'Home Base'. Master these 5 interlocking shapes to solo anywhere on the guitar."
-                    : "Professional 'Cheat Codes' used by the greats. These zones are safe havens for soulful melodic playing."
+                    ? t('pentatonicBoxDesc')
+                    : t('proCheatCodes')
                   }
                 </p>
 
@@ -388,7 +426,7 @@ export function TheoryView({
                       viewMode === 'patterns' ? "bg-white/10 text-white shadow-lg" : "text-white/30"
                     )}
                    >
-                     Pentatonic Box
+                     {t('pentatonicBox')}
                    </button>
                    <button 
                     onClick={() => handleSetViewMode('blueprints')}
@@ -397,7 +435,7 @@ export function TheoryView({
                       viewMode === 'blueprints' ? "bg-white/10 text-white shadow-lg" : "text-white/30"
                     )}
                    >
-                     Pro Blueprints
+                     {t('proBlueprints')}
                    </button>
                 </div>
              </div>

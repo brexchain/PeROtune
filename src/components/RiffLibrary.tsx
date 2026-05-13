@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Music, ArrowRight, Heart, Star, Play, X, ExternalLink } from 'lucide-react';
+import { Music, ArrowRight, Heart, Star, Play, X, ExternalLink, Zap, Compass } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { RIFFS, InstrumentCategory, Riff } from '../constants';
+import { useLanguage } from '../lib/i18n';
 
 const RhythmTimeline = ({ pattern, activeIndex, isPlaying }: { pattern: string, activeIndex: number, isPlaying: boolean }) => {
   const tokens = pattern.replace(/\(Riff\)|\/|resonate/g, '').split(/\s+/).filter(t => t.trim().length > 0);
@@ -66,7 +67,22 @@ const RhythmTimeline = ({ pattern, activeIndex, isPlaying }: { pattern: string, 
   );
 };
 
-export function RiffLibrary({ theme = 'dark', category = 'guitar', onPlayRiff, playingRiff }: { theme?: 'dark' | 'light', category?: InstrumentCategory | 'all', onPlayRiff?: (riff: Riff) => void, playingRiff?: { id: string, activeIndex: number } | null }) {
+export function RiffLibrary({ 
+  theme = 'dark', 
+  category = 'guitar', 
+  onPlayRiff, 
+  playingRiff,
+  onCategoryChange,
+  accentColor = '#10b981'
+}: { 
+  theme?: 'dark' | 'light', 
+  category?: InstrumentCategory | 'all', 
+  onPlayRiff?: (riff: Riff) => void, 
+  playingRiff?: { id: string, activeIndex: number } | null,
+  onCategoryChange?: (category: InstrumentCategory) => void,
+  accentColor?: string
+}) {
+  const { t } = useLanguage();
   const isDark = theme === 'dark';
   const [favorites, setFavorites] = useState<string[]>(() => {
     const saved = localStorage.getItem('perotuner-favorites');
@@ -160,7 +176,7 @@ export function RiffLibrary({ theme = 'dark', category = 'guitar', onPlayRiff, p
               <h3 className={cn(
                 "text-[10px] uppercase tracking-[0.3em] font-bold transition-colors",
                 isDark ? "text-white/80" : "text-black/80"
-              )}>Quick Access Favorites</h3>
+              )}>{t('favorites')}</h3>
             </div>
             
             <div className="grid grid-cols-1 gap-4">
@@ -187,11 +203,10 @@ export function RiffLibrary({ theme = 'dark', category = 'guitar', onPlayRiff, p
                           <button 
                             onClick={(e) => {
                               e.stopPropagation();
-                              // Toggle audio preview logic (to be handled via a prop or state)
                               if (onPlayRiff) onPlayRiff(riff);
                             }}
                             className="p-2.5 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 transition-colors"
-                            title="Play Reference"
+                            title={t('referenceReady')}
                           >
                             <Play size={18} />
                           </button>
@@ -204,7 +219,7 @@ export function RiffLibrary({ theme = 'dark', category = 'guitar', onPlayRiff, p
                           <button 
                             onClick={(e) => hideRiff(e, riff.id)}
                             className="p-2.5 rounded-full hover:bg-red-500/10 text-red-500/40 hover:text-red-500 transition-colors"
-                            title="Remove from library"
+                            title={t('removeLibrary')}
                           >
                             <X size={18} />
                           </button>
@@ -216,7 +231,7 @@ export function RiffLibrary({ theme = 'dark', category = 'guitar', onPlayRiff, p
                           <h4 className={cn(
                             "text-xl font-bold mb-3 transition-colors",
                             isDark ? "text-white" : "text-black"
-                          )}>{riff.title}</h4>
+                          )}>{t(riff.id as any, riff.title)}</h4>
                           
                           <div className="space-y-3 mb-6">
                             {riff.nashvilleNumbers && (
@@ -232,7 +247,7 @@ export function RiffLibrary({ theme = 'dark', category = 'guitar', onPlayRiff, p
                             )}
                             {riff.chords && (
                               <div className="flex flex-col">
-                                <span className="text-[9px] uppercase tracking-widest text-white/20 font-black">Progression</span>
+                                <span className="text-[9px] uppercase tracking-widest text-white/20 font-black">{t('progression' as any, 'Progression')}</span>
                                 <span className={cn(
                                   "text-lg font-black tracking-tight leading-tight",
                                   isDark ? "text-white/90" : "text-black/90"
@@ -261,7 +276,7 @@ export function RiffLibrary({ theme = 'dark', category = 'guitar', onPlayRiff, p
                         <div className="flex flex-col gap-5 w-full">
                           {riff.refrain && (
                             <div className="space-y-1">
-                              <span className="text-[9px] uppercase tracking-[0.4em] text-emerald-500/40 font-black">Lyric Refrain</span>
+                              <span className="text-[9px] uppercase tracking-[0.4em] text-emerald-500/40 font-black">{t('lyricRefrain')}</span>
                               <p className="text-lg font-black italic text-white leading-tight underline decoration-emerald-500/30 underline-offset-4">
                                 "{riff.refrain}"
                               </p>
@@ -269,7 +284,7 @@ export function RiffLibrary({ theme = 'dark', category = 'guitar', onPlayRiff, p
                           )}
                           
                           <div className="space-y-1">
-                            <span className="text-[9px] uppercase tracking-[0.4em] text-emerald-500/40 font-black">Focus Tip</span>
+                            <span className="text-[9px] uppercase tracking-[0.4em] text-emerald-500/40 font-black">{t('focusTip')}</span>
                             <p className="text-xs text-white/60 leading-relaxed font-medium px-4">
                               {riff.description}
                             </p>
@@ -284,7 +299,7 @@ export function RiffLibrary({ theme = 'dark', category = 'guitar', onPlayRiff, p
                                 className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500/30 transition-all"
                              >
                                 <ExternalLink size={12} />
-                                Find Chords
+                                {t('searchChords')}
                              </a>
                           </div>
                         </div>
@@ -311,7 +326,7 @@ export function RiffLibrary({ theme = 'dark', category = 'guitar', onPlayRiff, p
           <h3 className={cn(
             "text-[10px] uppercase tracking-[0.3em] transition-colors",
             isDark ? "text-white/60" : "text-black/60"
-          )}>Pro Riff Library</h3>
+          )}>{t('library')}</h3>
         </div>
         
         <div 
@@ -374,15 +389,15 @@ export function RiffLibrary({ theme = 'dark', category = 'guitar', onPlayRiff, p
                     </div>
 
                     <div className="mb-10">
-                      <div className="flex flex-col mb-4 pr-12">
-                        <span className="text-[10px] font-mono text-emerald-400/50 mb-2">
-                          #{String(filteredRiffs.indexOf(riff) + 1).padStart(3, '0')}
-                        </span>
-                        <h4 className={cn(
-                          "text-2xl font-black transition-colors tracking-tight",
-                          isDark ? "text-white" : "text-black"
-                        )}>{riff.title}</h4>
-                      </div>
+                          <div className="flex flex-col mb-4 pr-12">
+                            <span className="text-[10px] font-mono text-emerald-400/50 mb-2">
+                              #{String(filteredRiffs.indexOf(riff) + 1).padStart(3, '0')}
+                            </span>
+                            <h4 className={cn(
+                            "text-2xl font-black transition-colors tracking-tight",
+                            isDark ? "text-white" : "text-black"
+                          )}>{t(riff.id as any, riff.title)}</h4>
+                          </div>
 
                       <div className="flex flex-wrap gap-2 mb-4">
                         {riff.chords && (
@@ -401,7 +416,7 @@ export function RiffLibrary({ theme = 'dark', category = 'guitar', onPlayRiff, p
                         "text-sm leading-relaxed transition-colors mb-4 line-clamp-2",
                         isDark ? "text-white/40" : "text-black/50"
                       )}>
-                        {riff.description}
+                        {t((riff.id + 'Desc') as any, riff.description)}
                       </p>
                     </div>
 
@@ -442,7 +457,7 @@ export function RiffLibrary({ theme = 'dark', category = 'guitar', onPlayRiff, p
                     <div className="flex flex-col gap-8 max-w-[280px]">
                       {riff.refrain ? (
                         <div className="space-y-2">
-                          <h4 className="text-emerald-400 text-[10px] font-black uppercase tracking-[0.4em]">Lyric Refrain</h4>
+                          <h4 className="text-emerald-400 text-[10px] font-black uppercase tracking-[0.4em]">{t('lyricRefrain')}</h4>
                           <p className="text-xl sm:text-2xl font-black italic underline decoration-emerald-500/30 underline-offset-8 leading-tight text-white">
                             "{riff.refrain}"
                           </p>
@@ -470,7 +485,7 @@ export function RiffLibrary({ theme = 'dark', category = 'guitar', onPlayRiff, p
 
                     <div className="mt-8 flex gap-3">
                        <ArrowRight className="text-emerald-500/50 rotate-180" size={24} />
-                       <span className="text-[10px] uppercase tracking-widest font-black text-white/20">tap to return</span>
+                       <span className="text-[10px] uppercase tracking-widest font-black text-white/20">{t('tapToReturn')}</span>
                     </div>
                   </div>
                 </motion.div>
@@ -507,16 +522,16 @@ export function RiffLibrary({ theme = 'dark', category = 'guitar', onPlayRiff, p
               <h3 className={cn(
                 "text-2xl font-black italic uppercase tracking-wider mb-1 transition-colors",
                 isDark ? "text-white" : "text-black"
-              )}>Explore All Riffs</h3>
+              )}>{t('exploreAll')}</h3>
               <p className={cn("text-[10px] uppercase tracking-[0.3em] font-bold opacity-40", isDark ? "text-white" : "text-black")}>
-                Full {category === 'all' ? 'Studio' : category} Collection
+                {t('fullStudio')} {category === 'all' ? 'Studio' : (category === 'guitar' ? t('guitar') : (category === '12string' ? t('twelveString') : t('ukulele')))}
               </p>
            </div>
            <div className={cn(
              "px-4 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-widest",
              isDark ? "bg-white/5 border-white/10 text-white/40" : "bg-black/5 border-black/10 text-black/40"
            )}>
-             {filteredRiffs.length} Items
+             {filteredRiffs.length} {t('items')}
            </div>
         </div>
 
@@ -570,24 +585,24 @@ export function RiffLibrary({ theme = 'dark', category = 'guitar', onPlayRiff, p
                     <div>
                       <span className="text-[10px] font-mono text-emerald-500/50 mb-1 block">#{String(idx + 1).padStart(3, '0')}</span>
                       <h4 className={cn("text-xl font-black tracking-tight mb-3", isDark ? "text-white" : "text-black")}>
-                        {riff.title}
+                        {t(riff.id as any, riff.title)}
                       </h4>
                       
                       <div className="space-y-3 mb-6">
                         {riff.nashvilleNumbers && (
                           <div className="flex flex-col">
-                             <span className="text-[9px] uppercase tracking-widest text-emerald-500/40 font-black">Nashville</span>
+                             <span className="text-[9px] uppercase tracking-widest text-emerald-500/40 font-black">{t('nashville')}</span>
                              <span className="text-xl font-mono font-black italic text-emerald-400 tracking-tighter line-clamp-1 leading-none">{riff.nashvilleNumbers}</span>
                           </div>
                         )}
                         {riff.chords && (
                           <div className="flex flex-col">
-                             <span className="text-[9px] uppercase tracking-widest text-white/20 font-black">Progression</span>
+                             <span className="text-[9px] uppercase tracking-widest text-white/20 font-black">{t('progression' as any, 'Progression')}</span>
                              <span className="text-base font-black text-white/80 line-clamp-1 leading-tight">{riff.chords}</span>
                           </div>
                         )}
                       </div>
-                      <p className="text-xs text-white/30 line-clamp-1 leading-relaxed italic">{riff.description}</p>
+                      <p className="text-xs text-white/30 line-clamp-1 leading-relaxed italic">{t((riff.id + 'Desc') as any, riff.description)}</p>
                     </div>
                     <div className="flex items-center justify-between">
                        <div className="flex-1 pr-3">
@@ -612,29 +627,29 @@ export function RiffLibrary({ theme = 'dark', category = 'guitar', onPlayRiff, p
                     <div className="flex flex-col gap-4 w-full">
                        {riff.refrain && (
                          <div className="space-y-1">
-                           <span className="text-[8px] uppercase tracking-[0.3em] text-emerald-500/40 font-black">Refrain Hook</span>
+                           <span className="text-[8px] uppercase tracking-[0.3em] text-emerald-500/40 font-black">{t('refrainHook')}</span>
                            <p className="text-base font-black italic text-white leading-tight underline decoration-emerald-500/30 underline-offset-4">
                              "{riff.refrain}"
                            </p>
                          </div>
                        )}
                        <div className="space-y-1">
-                          <span className="text-[8px] uppercase tracking-[0.3em] text-emerald-500/40 font-black">Guitarist Tip</span>
-                          <p className="text-xs font-bold text-white/40 leading-snug px-2">"{riff.description}"</p>
+                          <span className="text-[8px] uppercase tracking-[0.3em] text-emerald-500/40 font-black">{t('guitaristTip')}</span>
+                          <p className="text-xs font-bold text-white/40 leading-snug px-2">"{t((riff.id + 'Desc') as any, riff.description)}"</p>
                        </div>
 
-                       <div className="mt-2">
-                         <a 
-                           href={`https://www.google.com/search?q=${encodeURIComponent(riff.title + " chords and lyrics")}`}
-                           target="_blank"
-                           rel="noreferrer"
-                           onClick={(e) => e.stopPropagation()}
-                           className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 border border-white/10 text-white/60 text-[9px] font-black uppercase tracking-widest hover:bg-white/20 hover:text-white transition-all mx-auto w-fit"
-                         >
-                           <ExternalLink size={12} />
-                           Search Chords
-                         </a>
-                       </div>
+                           <div className="mt-2">
+                             <a 
+                               href={`https://www.google.com/search?q=${encodeURIComponent(riff.title + " chords and lyrics")}`}
+                               target="_blank"
+                               rel="noreferrer"
+                               onClick={(e) => e.stopPropagation()}
+                               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 border border-white/10 text-white/60 text-[9px] font-black uppercase tracking-widest hover:bg-white/20 hover:text-white transition-all mx-auto w-fit"
+                             >
+                               <ExternalLink size={12} />
+                               {t('searchChords')}
+                             </a>
+                           </div>
                     </div>
                     <div className="absolute bottom-6 pt-4 border-t border-white/5 w-[80%]">
                        <span className="text-[8px] font-mono text-white/10 uppercase tracking-widest leading-none">Reference Ready</span>

@@ -1,20 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { 
-  Settings, 
-  Mic, 
-  MicOff, 
-  Music, 
-  Volume2, 
-  Sparkles, 
-  Clock,
-  Compass,
-  Zap,
-  LayoutGrid,
-  Sun,
-  Moon,
-  MessageCircle
-} from 'lucide-react';
+import { Settings, Mic, MicOff, Music, Volume2, Sparkles, Clock, Compass, Zap, LayoutGrid, Sun, Moon, MessageCircle, Languages, Maximize } from 'lucide-react';
 import { usePitchDetection } from './hooks/usePitchDetection';
 import { GuitarHub } from './components/GuitarHub';
 import { NeedleBar } from './components/NeedleBar';
@@ -28,6 +14,7 @@ import { ContactPopup } from './components/ContactPopup';
 import { LuthierConfig, StudioSettings } from './components/LuthierConfig';
 import { cn } from './lib/utils';
 import { GUITAR_STRINGS, UKULELE_STRINGS, TWELVE_STRING_STRINGS, InstrumentCategory, Riff } from './constants';
+import { LanguageProvider, Language, translations, getTranslation } from './lib/i18n';
 
 type ViewMode = 'tuner' | 'metronome' | 'riffs' | 'theory';
 
@@ -39,7 +26,10 @@ const DEFAULT_SETTINGS: StudioSettings = {
 };
 
 export default function App() {
+  const [language, setLanguage] = useState<Language>('de');
   const [activeView, setActiveView] = useState<ViewMode>('tuner');
+
+  const t = (key: keyof typeof translations['en']) => getTranslation(language, key);
   const [isContactOpen, setIsContactOpen] = useState(false);
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [instrument, setInstrument] = useState<InstrumentCategory>('guitar');
@@ -97,7 +87,7 @@ export default function App() {
     osc2.frequency.setValueAtTime(freq * 2.01, startTime); 
     
     gain.gain.setValueAtTime(0, startTime);
-    gain.gain.linearRampToValueAtTime(0.55, startTime + 0.005);
+    gain.gain.linearRampToValueAtTime(0.75, startTime + 0.005);
     gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
     
     const filter = ctx.createBiquadFilter();
@@ -135,11 +125,11 @@ export default function App() {
         const cleanPattern = riff.pattern.replace(/\(Riff\)|\/|resonate/g, '');
         const patternTokens = cleanPattern.split(/\s+/).filter(t => t.trim().length > 0);
         
-        let tempo = 0.4;
-        if (riff.title.includes('Sandman') || riff.title.includes('Paranoid')) tempo = 0.22;
-        if (riff.title.includes('Smoke') || riff.title.includes('Iron Man')) tempo = 0.5;
-        if (riff.title.includes('Stairway') || riff.title.includes('Hallelujah')) tempo = 0.6;
-        if (riff.title.includes('Elite')) tempo = 0.25;
+        let tempo = 0.45; // Slightly slower default for better clarity
+        if (riff.title.includes('Sandman') || riff.title.includes('Paranoid')) tempo = 0.25;
+        if (riff.title.includes('Smoke') || riff.title.includes('Iron Man') || riff.title.includes('Highway')) tempo = 0.55;
+        if (riff.title.includes('Stairway') || riff.title.includes('Hallelujah') || riff.title.includes('Wish')) tempo = 0.65;
+        if (riff.title.includes('Elite')) tempo = 0.28;
 
         const loopGap = 1.0;
 
@@ -230,6 +220,9 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('perotuner-settings', JSON.stringify(settings));
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', settings.bgColor);
+    // Sync body background to prevent white background on mobile zoom/scroll
+    document.body.style.backgroundColor = settings.bgColor;
+    document.documentElement.style.backgroundColor = settings.bgColor;
   }, [settings]);
 
   useEffect(() => {
@@ -257,7 +250,7 @@ export default function App() {
   ];
 
   return (
-    <>
+    <LanguageProvider value={{ language, setLanguage, t }}>
       {/* Success Flash */}
       <AnimatePresence>
         {showPerfectFlash && (
@@ -298,10 +291,20 @@ export default function App() {
             <span className={cn(
               "text-[9px] uppercase tracking-[0.4em] font-medium transition-opacity",
               theme === 'dark' ? "text-white/40" : "text-black/40"
-            )}>Prof. Amateur Park Player PWA</span>
+            )}>{t('profAmateur')}</span>
           </div>
 
           <div className="flex items-center gap-3">
+            <button 
+              onClick={() => setLanguage(prev => prev === 'de' ? 'en' : 'de')}
+              className={cn(
+                "px-3 h-10 rounded-full border flex items-center gap-2 transition-all group",
+                theme === 'dark' ? "bg-white/5 border-white/5 hover:bg-white/10" : "bg-black/5 border-black/5 hover:bg-black/10"
+              )}
+            >
+              <Languages size={14} className="opacity-60 group-hover:text-emerald-500 transition-colors" />
+              <span className="text-[10px] font-black uppercase tracking-widest opacity-60 group-hover:opacity-100">{language}</span>
+            </button>
             <button 
               onClick={() => setTheme(prev => prev === 'dark' ? 'light' : 'dark')}
               className={cn(
@@ -310,6 +313,27 @@ export default function App() {
               )}
             >
               {theme === 'dark' ? <Sun size={14} className="opacity-60" /> : <Moon size={14} className="opacity-60" />}
+            </button>
+            <button 
+              onClick={() => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                // Simple trick to help reset visual viewport focus
+                const viewport = document.querySelector('meta[name="viewport"]');
+                if (viewport) {
+                  const content = viewport.getAttribute('content');
+                  viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0');
+                  setTimeout(() => {
+                    viewport.setAttribute('content', content || 'width=device-width, initial-scale=1.0');
+                  }, 100);
+                }
+              }}
+              className={cn(
+                "w-10 h-10 rounded-full border flex items-center justify-center transition-all",
+                theme === 'dark' ? "bg-white/5 border-white/5 hover:bg-white/10" : "bg-black/5 border-black/5 hover:bg-black/10"
+              )}
+              title="Reset View"
+            >
+              <Maximize size={14} className="opacity-60" />
             </button>
             <button 
               onClick={() => setIsConfigOpen(true)}
@@ -361,7 +385,7 @@ export default function App() {
                       } : {}}
                     >
                       <item.icon size={12} />
-                      <span className="lowercase first-letter:uppercase">{item.label}</span>
+                      <span className="lowercase first-letter:uppercase">{item.id === 'guitar' ? t('acoustic') : item.id === '12string' ? t('twelveString') : t('ukulele')}</span>
                     </button>
                   ))}
                 </div>
@@ -422,7 +446,7 @@ export default function App() {
                             ))}
                           </div>
                         </div>
-                        <span className="text-[7px] uppercase tracking-widest font-black opacity-30">Signal</span>
+                        <span className="text-[7px] uppercase tracking-widest font-black opacity-30">{t('signal')}</span>
                       </div>
 
                       {/* 432Hz Button */}
@@ -459,7 +483,7 @@ export default function App() {
                           "text-[8px] uppercase tracking-widest font-bold font-mono transition-opacity whitespace-nowrap",
                           referenceFreq === 432 ? "opacity-100" : "opacity-20"
                         )} style={referenceFreq === 432 ? { color: settings.accentColor } : {}}>
-                          Healing
+                          {t('healing')}
                         </span>
                       </div>
 
@@ -503,7 +527,7 @@ export default function App() {
                           "text-[9px] uppercase tracking-[0.2em] font-black transition-all",
                           isActive ? "text-emerald-500 animate-pulse" : "opacity-30"
                         )}>
-                          {isActive ? "Listening..." : "Start Mic"}
+                          {isActive ? t('listening') : t('startMic')}
                         </span>
                       </div>
 
@@ -541,7 +565,7 @@ export default function App() {
                           "text-[8px] uppercase tracking-widest font-bold font-mono transition-opacity whitespace-nowrap",
                           referenceFreq === 440 ? "opacity-100" : "opacity-20"
                         )} style={referenceFreq === 440 ? { color: settings.accentColor } : {}}>
-                          Standard
+                          {t('standard')}
                         </span>
                       </div>
 
@@ -563,7 +587,7 @@ export default function App() {
                           "text-[8px] uppercase tracking-widest font-bold font-mono transition-opacity whitespace-nowrap",
                           isMetronomeOpen ? "opacity-100" : "opacity-20"
                         )} style={isMetronomeOpen ? { color: settings.accentColor } : {}}>
-                          Click
+                          {t('clock')}
                         </span>
                       </div>
                     </div>
@@ -604,7 +628,7 @@ export default function App() {
                       "text-[10px] uppercase tracking-[0.3em] transition-opacity font-bold",
                       theme === 'dark' ? "opacity-40" : "opacity-60"
                     )}>
-                      {instrument === '12string' ? '12-String' : instrument.charAt(0).toUpperCase() + instrument.slice(1)} Tuning Reference
+                      {instrument === '12string' ? t('twelveString') : (instrument === 'ukulele' ? t('ukulele') : t('guitar'))} {t('tuningReference')}
                     </h3>
                     <div className="h-0.5 w-8 rounded-full" style={{ backgroundColor: `${settings.accentColor}4D` }} />
                   </div>
@@ -624,6 +648,8 @@ export default function App() {
                     category="all" 
                     onPlayRiff={handlePlayRiff}
                     playingRiff={playingRiff}
+                    onCategoryChange={setInstrument}
+                    accentColor={settings.accentColor}
                    />
                 </div>
 
@@ -670,8 +696,8 @@ export default function App() {
                 className="flex flex-col items-center"
               >
                 <div className="flex flex-col items-center gap-2 mb-8">
-                  <h2 className="text-2xl font-bold tracking-tight">Studio Tempo</h2>
-                  <p className="text-[10px] uppercase tracking-[0.3em] opacity-40">Precision Timing Engine</p>
+                  <h2 className="text-2xl font-bold tracking-tight">{t('studioTempo')}</h2>
+                  <p className="text-[10px] uppercase tracking-[0.3em] opacity-40">{t('precisionTiming')}</p>
                 </div>
                 <Metronome theme={theme} accentColor={settings.accentColor} />
               </motion.div>
@@ -688,6 +714,8 @@ export default function App() {
                   theme={theme} 
                   category={instrument} 
                   onPlayRiff={handlePlayRiff}
+                  onCategoryChange={setInstrument}
+                  accentColor={settings.accentColor}
                 />
               </motion.div>
             )}
@@ -695,55 +723,60 @@ export default function App() {
         </main>
 
         {/* Professional Bottom Navigation (iOS Style) */}
-        <nav className={cn(
-          "fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-1 sm:gap-2 p-1.5 sm:p-2 rounded-3xl border backdrop-blur-2xl z-50 transition-all shadow-2xl max-w-[95vw] overflow-hidden",
-          theme === 'dark' ? "bg-black/60 border-white/10" : "bg-white/80 border-black/10"
-        )}>
-          {[
-            { id: 'tuner', label: 'Tuner', icon: Volume2 },
-            { id: 'theory', label: 'Theory', icon: Compass },
-            { id: 'metronome', label: 'Clock', icon: Clock },
-            { id: 'riffs', label: 'Riffs', icon: LayoutGrid }
-          ].map((tab) => (
+        <div className="fixed bottom-0 left-0 right-0 p-4 sm:p-8 flex justify-center z-50 pointer-events-none pb-[calc(env(safe-area-inset-bottom)+1rem)]">
+          <nav className={cn(
+            "pointer-events-auto flex items-center gap-1 sm:gap-2 p-1.5 sm:p-2 rounded-3xl border backdrop-blur-2xl transition-all shadow-2xl max-w-[95vw] overflow-hidden",
+            theme === 'dark' ? "bg-black/60 border-white/10" : "bg-white/80 border-black/10"
+          )}>
+            {[
+              { id: 'tuner', label: t('tuner'), icon: Volume2 },
+              { id: 'theory', label: t('theory'), icon: Compass },
+              { id: 'metronome', label: t('clock'), icon: Clock },
+              { id: 'riffs', label: t('riffs'), icon: LayoutGrid }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => {
+                  setActiveView(tab.id as any);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className={cn(
+                  "relative flex flex-col items-center gap-1 px-3 sm:px-5 py-2 sm:py-3 rounded-2xl transition-all duration-300 group cursor-pointer hover:scale-105 active:scale-95",
+                  activeView === tab.id 
+                    ? "text-white" 
+                    : theme === 'dark' ? "text-white/30 hover:text-white/60" : "text-black/30 hover:text-black/60"
+                )}
+              >
+                <tab.icon size={20} className={cn(
+                  "transition-transform duration-300 group-hover:scale-110",
+                  activeView === tab.id ? "scale-110" : ""
+                )} />
+                <span className="text-[9px] uppercase tracking-widest font-black">{tab.label}</span>
+                
+                {activeView === tab.id && (
+                  <motion.div
+                    layoutId="active-tab"
+                    className="absolute inset-0 rounded-2xl z-[-1]"
+                    style={{ backgroundColor: settings.accentColor }}
+                  />
+                )}
+              </button>
+            ))}
+            
+            <div className="w-px h-8 mx-1 opacity-10 bg-current" />
+  
             <button
-              key={tab.id}
-              onClick={() => setActiveView(tab.id as any)}
+              onClick={() => setIsContactOpen(true)}
               className={cn(
                 "relative flex flex-col items-center gap-1 px-3 sm:px-5 py-2 sm:py-3 rounded-2xl transition-all duration-300 group cursor-pointer hover:scale-105 active:scale-95",
-                activeView === tab.id 
-                  ? "text-white" 
-                  : theme === 'dark' ? "text-white/30 hover:text-white/60" : "text-black/30 hover:text-black/60"
+                theme === 'dark' ? "text-emerald-500/60 hover:text-emerald-400" : "text-emerald-600/60 hover:text-emerald-500"
               )}
             >
-              <tab.icon size={20} className={cn(
-                "transition-transform duration-300 group-hover:scale-110",
-                activeView === tab.id ? "scale-110" : ""
-              )} />
-              <span className="text-[9px] uppercase tracking-widest font-black">{tab.label}</span>
-              
-              {activeView === tab.id && (
-                <motion.div
-                  layoutId="active-tab"
-                  className="absolute inset-0 rounded-2xl z-[-1]"
-                  style={{ backgroundColor: settings.accentColor }}
-                />
-              )}
+              <MessageCircle size={20} className="transition-transform duration-300 group-hover:scale-110" />
+              <span className="text-[9px] uppercase tracking-widest font-black">{t('contact')}</span>
             </button>
-          ))}
-          
-          <div className="w-px h-8 mx-1 opacity-10 bg-current" />
-
-          <button
-            onClick={() => setIsContactOpen(true)}
-            className={cn(
-              "relative flex flex-col items-center gap-1 px-3 sm:px-5 py-2 sm:py-3 rounded-2xl transition-all duration-300 group cursor-pointer hover:scale-105 active:scale-95",
-              theme === 'dark' ? "text-emerald-500/60 hover:text-emerald-400" : "text-emerald-600/60 hover:text-emerald-500"
-            )}
-          >
-            <MessageCircle size={20} className="transition-transform duration-300 group-hover:scale-110" />
-            <span className="text-[9px] uppercase tracking-widest font-black">Contact</span>
-          </button>
-        </nav>
+          </nav>
+        </div>
         <ContactPopup 
           isOpen={isContactOpen} 
           onClose={() => setIsContactOpen(false)} 
@@ -767,6 +800,6 @@ export default function App() {
         </div>
       </footer>
     </div>
-    </>
+    </LanguageProvider>
   );
 }

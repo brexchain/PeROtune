@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, MessageCircle, Send, CheckCircle2, ChevronRight } from 'lucide-react';
 import { cn } from '../lib/utils';
 
+import { useLanguage } from '../lib/i18n';
+
 interface ContactPopupProps {
   isOpen: boolean;
   onClose: () => void;
@@ -11,16 +13,17 @@ interface ContactPopupProps {
 }
 
 export function ContactPopup({ isOpen, onClose, theme, accentColor }: ContactPopupProps) {
+  const { t } = useLanguage();
   const [feedback, setFeedback] = useState('');
   const [isSent, setIsSent] = useState(false);
   const isDark = theme === 'dark';
 
   const quickFeedback = [
-    { label: "Love the UI!", text: "The UI is slicker than a fresh set of Elixirs! Love the Harmonic Engine. 🎸" },
-    { label: "Needle Scaling", text: "Maybe add a 'Smoothing' mode for high-gain environments? 🎯" },
-    { label: "Feature Idea", text: "Would love to see some classic alternate tunings (Open G, DADGAD) added! 🛠️" },
-    { label: "Funny", text: "My playing still sounds like a bag of cats, but at least the cats are in tune now. 🐱" },
-    { label: "Reporting Bug", text: "Found a small glitch in the matrix while tuning my 7-string. 🐛" }
+    { label: t('fb1Lab'), text: t('fb1Txt') },
+    { label: t('fb2Lab'), text: t('fb2Txt') },
+    { label: t('fb3Lab'), text: t('fb3Txt') },
+    { label: t('fb4Lab'), text: t('fb4Txt') },
+    { label: t('fb5Lab'), text: t('fb5Txt') }
   ];
 
   const handleWhatsAppSend = () => {
@@ -71,8 +74,8 @@ export function ContactPopup({ isOpen, onClose, theme, accentColor }: ContactPop
                   <MessageCircle size={18} />
                 </div>
                 <div>
-                  <h3 className="text-sm font-black uppercase tracking-tighter italic">Harmonic Feedback</h3>
-                  <p className="text-[9px] uppercase tracking-widest opacity-40 font-bold">Connect directly with the luthier</p>
+                  <h3 className="text-sm font-black uppercase tracking-tighter italic">{t('contactTitle')}</h3>
+                  <p className="text-[9px] uppercase tracking-widest opacity-40 font-bold">{t('contactDesc')}</p>
                 </div>
               </div>
               <button 
@@ -109,14 +112,14 @@ export function ContactPopup({ isOpen, onClose, theme, accentColor }: ContactPop
               <textarea
                 value={feedback}
                 onChange={(e) => setFeedback(e.target.value)}
-                placeholder="Share your thoughts or tap a reason above..."
+                placeholder={t('placeholderFeedback')}
                 className={cn(
                   "w-full bg-transparent border-none focus:ring-0 text-sm min-h-[120px] resize-none pb-4",
                   isDark ? "text-white placeholder:text-white/20" : "text-black placeholder:text-black/20"
                 )}
               />
               <div className="absolute bottom-2 right-4 opacity-20 text-[9px] font-mono">
-                {feedback.length} chars
+                {feedback.length} {t('chars')}
               </div>
             </div>
 
@@ -138,12 +141,12 @@ export function ContactPopup({ isOpen, onClose, theme, accentColor }: ContactPop
               {isSent ? (
                 <>
                   <CheckCircle2 size={16} />
-                  <span>Transmitting...</span>
+                  <span>{t('transmitting')}</span>
                 </>
               ) : (
                 <>
                   <Send size={16} className={cn("transition-transform", feedback.trim() ? "translate-x-1 -translate-y-1" : "")} />
-                  <span>Open WhatsApp</span>
+                  <span>{t('openWhatsapp')}</span>
                 </>
               )}
             </motion.button>
