@@ -8,6 +8,7 @@ import { ToneReference } from './components/ToneReference';
 import { RiffLibrary } from './components/RiffLibrary';
 import { Metronome } from './components/Metronome';
 import { TheoryView } from './components/TheoryView';
+import { CircleOfFifths } from './components/CircleOfFifths';
 import { GuitarStringsBackground } from './components/GuitarStringsBackground';
 import { FeedbackSection } from './components/FeedbackSection';
 import { ContactPopup } from './components/ContactPopup';
@@ -599,7 +600,13 @@ export default function App() {
                     settings.layoutMode === 'horizontal' ? "lg:max-w-md" : "mt-12"
                   )}>
                     <div className="w-full flex flex-col items-center gap-2">
-                      <NeedleBar cents={pitchData?.cents ?? 0} active={!!pitchData} theme={theme} />
+                      <NeedleBar 
+                        cents={pitchData?.cents ?? 0} 
+                        active={!!pitchData} 
+                        theme={theme} 
+                        currentNote={pitchData?.note}
+                        amplitude={pitchData?.amplitude}
+                      />
                     </div>
                     
                     <div className="relative group">
@@ -639,6 +646,27 @@ export default function App() {
                     accentColor={settings.accentColor}
                     onNoteTrigger={setPlayedReferenceNote}
                   />
+
+                  {/* Circle of Fifths below Reference */}
+                  <div className="mt-12 w-full max-w-sm">
+                    <div className="flex flex-col items-center gap-2 mb-8">
+                      <h3 className={cn(
+                        "text-[10px] uppercase tracking-[0.3em] font-bold opacity-40",
+                        theme === 'dark' ? "text-white" : "text-black"
+                      )}>
+                        {t('circleOfFifths')}
+                      </h3>
+                      <div className="h-0.5 w-8 rounded-full" style={{ backgroundColor: `${settings.accentColor}4D` }} />
+                    </div>
+                    <div className="h-80 w-80 mx-auto">
+                      <CircleOfFifths 
+                        activeNote={pitchData?.note ?? null}
+                        accentColor={settings.accentColor} 
+                        theme={theme}
+                        language={language}
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 {/* Bottom Discovery Section */}

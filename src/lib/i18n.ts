@@ -231,6 +231,7 @@ export const translations = {
 
     // Theory View
     interactiveTheory: "Interactive Theory",
+    circleOfFifths: "Circle of Fifths & Solo Patterns",
     soloingHints: "Soloing Hints",
     pentatonicPatterns: "Patterns",
     nashvilleNumbers: "Nashville Numbers",

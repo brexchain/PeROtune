@@ -2,20 +2,42 @@ import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Info } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { Language } from '../lib/i18n';
 
 interface CircleOfFifthsProps {
   activeNote: string | null;
   accentColor: string;
   theme: 'dark' | 'light';
   isLarge?: boolean;
+  language?: Language;
 }
 
 const FIFTHS = ['C', 'G', 'D', 'A', 'E', 'B', 'Gb', 'Db', 'Ab', 'Eb', 'Bb', 'F'];
 const MINORS = ['Am', 'Em', 'Bm', 'F#m', 'C#m', 'G#m', 'Ebm', 'Bbm', 'Fm', 'Cm', 'Gm', 'Dm'];
 
-export function CircleOfFifths({ activeNote, accentColor, theme, isLarge = false }: CircleOfFifthsProps) {
+export function CircleOfFifths({ activeNote, accentColor, theme, isLarge = false, language = 'en' }: CircleOfFifthsProps) {
   const isDark = theme === 'dark';
   const [selectedIdx, setSelectedIdx] = React.useState<number | null>(null);
+
+  const getLocalizedNote = (note: string) => {
+    if (language !== 'de') return note;
+    // German: B -> H, Bb -> B
+    const map: Record<string, string> = {
+      'B': 'H',
+      'Bb': 'B',
+      'Gb': 'F#',
+      'Db': 'C#',
+      'Ab': 'G#',
+      'Eb': 'D#',
+      'Bm': 'Hm',
+      'Bbm': 'Bm',
+      'G#m': 'Abm',
+      'C#m': 'Dbm',
+      'F#m': 'Gbm',
+      'Ebm': 'D#m'
+    };
+    return map[note] || note;
+  };
   
   const [showTheory, setShowTheory] = React.useState(false);
   
@@ -157,7 +179,7 @@ export function CircleOfFifths({ activeNote, accentColor, theme, isLarge = false
                 )}
                 style={{ fill: familyType ? accentColor : (isDetected ? '#10b981' : undefined) }}
               >
-                {note}
+                {getLocalizedNote(note)}
               </text>
             </g>
           );
@@ -203,7 +225,7 @@ export function CircleOfFifths({ activeNote, accentColor, theme, isLarge = false
                 )}
                 style={{ fill: familyType ? accentColor : (isDetected ? '#10b981' : undefined) }}
               >
-                {note}
+                {getLocalizedNote(note)}
               </text>
             </g>
           );
@@ -226,7 +248,7 @@ export function CircleOfFifths({ activeNote, accentColor, theme, isLarge = false
                     className="text-[10px] font-serif font-black italic"
                     style={{ fill: selectedIdx !== null ? accentColor : '#10b981' }}
                 >
-                    {selectedIdx !== null ? FIFTHS[selectedIdx] : normalizedActive}
+                    {getLocalizedNote(selectedIdx !== null ? FIFTHS[selectedIdx] : normalizedActive!)}
                 </text>
                 <text
                     x="50"

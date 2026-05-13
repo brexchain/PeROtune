@@ -10,6 +10,7 @@ export interface PitchData {
   note: string;
   cents: number;
   clarity: number;
+  amplitude: number;
 }
 
 const NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
@@ -154,7 +155,8 @@ export function usePitchDetection(referenceA: number = 440) {
           frequency: smoothedFreq,
           note,
           cents,
-          clarity: 1.0 
+          clarity: 1.0,
+          amplitude: rms
         });
       }
     } else {
