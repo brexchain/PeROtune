@@ -14,7 +14,7 @@ import { FeedbackSection } from './components/FeedbackSection';
 import { ContactPopup } from './components/ContactPopup';
 import { LuthierConfig, StudioSettings } from './components/LuthierConfig';
 import { cn } from './lib/utils';
-import { GUITAR_STRINGS, UKULELE_STRINGS, TWELVE_STRING_STRINGS, InstrumentCategory, Riff } from './constants';
+import { GUITAR_STRINGS, UKULELE_STRINGS, TWELVE_STRING_STRINGS, InstrumentCategory, Riff, EADGBE_MNEMONICS } from './constants';
 import { LanguageProvider, Language, translations, getTranslation } from './lib/i18n';
 
 type ViewMode = 'tuner' | 'metronome' | 'riffs' | 'theory';
@@ -28,6 +28,12 @@ const DEFAULT_SETTINGS: StudioSettings = {
 
 export default function App() {
   const [language, setLanguage] = useState<Language>('de');
+  const [mnemonicIdx, setMnemonicIdx] = useState(0);
+
+  useEffect(() => {
+    if (language === 'de') setMnemonicIdx(0);
+    else setMnemonicIdx(2);
+  }, [language]);
   const [activeView, setActiveView] = useState<ViewMode>('tuner');
 
   const t = (key: keyof typeof translations['en']) => getTranslation(language, key);
@@ -349,7 +355,7 @@ export default function App() {
         </header>
 
         {/* Tab Content */}
-        <main className="w-full max-w-4xl px-4 pt-4">
+        <main className="w-full max-w-4xl px-4 pt-0">
           <AnimatePresence mode="wait">
             {activeView === 'tuner' && (
               <motion.div
@@ -362,12 +368,14 @@ export default function App() {
                 <GuitarStringsBackground 
                   allStrings={getStrings()} 
                   tunedStrings={tunedStrings} 
+                  activeNote={pitchData?.note}
+                  activeCents={pitchData?.cents}
                   className="opacity-20 top-[-100px] bottom-0"
                 />
-
+ 
                 {/* Instrument Selector */}
                 <div className={cn(
-                  "flex p-1 rounded-2xl border mb-12 backdrop-blur-xl",
+                  "flex p-1 rounded-2xl border mb-6 backdrop-blur-xl",
                   theme === 'dark' ? "bg-white/5 border-white/5 shadow-2xl" : "bg-black/5 border-black/5 shadow-lg"
                 )}>
                   {instruments.map((item) => (
@@ -597,7 +605,7 @@ export default function App() {
                   {/* Visualization Station */}
                   <section className={cn(
                     "flex flex-col items-center gap-8 w-full max-w-xl",
-                    settings.layoutMode === 'horizontal' ? "lg:max-w-md" : "mt-12"
+                    settings.layoutMode === 'horizontal' ? "lg:max-w-md" : "mt-6"
                   )}>
                     <div className="w-full flex flex-col items-center gap-2">
                       <NeedleBar 
@@ -628,7 +636,7 @@ export default function App() {
                   </section>
                 </div>
 
-                <div className="mt-16 w-full flex flex-col items-center gap-6 border-t border-white/5 pt-12">
+                <div className="mt-10 w-full flex flex-col items-center gap-6 border-t border-white/5 pt-8">
                   <div className="flex items-center gap-3">
                     <div className="h-0.5 w-8 rounded-full" style={{ backgroundColor: `${settings.accentColor}4D` }} />
                     <h3 className={cn(
@@ -646,6 +654,41 @@ export default function App() {
                     accentColor={settings.accentColor}
                     onNoteTrigger={setPlayedReferenceNote}
                   />
+
+                  {/* Tuning Mnemonic Support */}
+                  <div 
+                    onClick={() => setMnemonicIdx((mnemonicIdx + 1) % EADGBE_MNEMONICS.length)}
+                    className="flex flex-col items-center gap-3 mt-4 group cursor-pointer active:scale-95 transition-transform"
+                  >
+                    <div className="flex items-center gap-2 px-2 py-0.5 rounded-full bg-white/5 border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Languages size={8} className="text-emerald-500" />
+                      <span className="text-[7px] uppercase font-bold text-white/40 tracking-wider">
+                        {EADGBE_MNEMONICS[mnemonicIdx].lang}
+                      </span>
+                    </div>
+                    <p className={cn(
+                      "text-[10px] sm:text-xs uppercase tracking-[0.2em] font-black text-center max-w-xs transition-all duration-500",
+                      theme === 'dark' ? "text-white/30 group-hover:text-emerald-400" : "text-black/30 group-hover:text-emerald-600"
+                    )}>
+                      {EADGBE_MNEMONICS[mnemonicIdx].phrase.split(' ').map((word, i) => {
+                        const isMatch = "EADGBE"[i] === word[0]?.toUpperCase();
+                        return (
+                          <span key={i} className="inline-block mr-2">
+                            <span className={cn(
+                              "font-serif italic border-b-2 transition-colors",
+                              isMatch ? "border-emerald-500 text-emerald-500" : "border-transparent"
+                            )}>
+                              {word[0]}
+                            </span>
+                            {word.slice(1)}
+                          </span>
+                        );
+                      })}
+                    </p>
+                    <div className="flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/20 bg-emerald-500/5 transition-opacity opacity-0 group-hover:opacity-100">
+                       <span className="text-[7px] uppercase font-bold text-emerald-500/60 leading-none tracking-widest">E - A - D - G - B - E</span>
+                    </div>
+                  </div>
 
                   {/* Circle of Fifths below Reference */}
                   <div className="mt-12 w-full max-w-sm">

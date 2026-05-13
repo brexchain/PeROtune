@@ -26,6 +26,8 @@ export const translations = {
     listening: "Hört zu...",
     startMic: "Mikro an",
     tuningReference: "Stimm-Referenz",
+    tuningMnemonic: "Ein Anfänger Der Gitarre Braucht Eifer",
+    tuningMnemonicEn: "Eddie Ate Dynamite Good Bye Eddie",
     latency: "Latenz",
     build: "Version",
 
@@ -460,6 +462,7 @@ export const translations = {
     listening: "Listening...",
     startMic: "Start Mic",
     tuningReference: "Tuning Reference",
+    tuningMnemonic: "Eddie Ate Dynamite Good Bye Eddie",
     latency: "Latency",
     build: "Build",
 

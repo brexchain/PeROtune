@@ -47,6 +47,47 @@ export interface Riff {
   category: InstrumentCategory;
 }
 
+export interface Mnemonic {
+  lang: string;
+  phrase: string;
+}
+
+export const EADGBE_MNEMONICS: Mnemonic[] = [
+  { lang: "German", phrase: "Ein Anfänger Der Gitarre Braucht Eifer" },
+  { lang: "German 2", phrase: "Eine Alte Dame Ging Brote Essen" },
+  { lang: "English", phrase: "Eddie Ate Dynamite Good Bye Eddie" },
+  { lang: "English 2", phrase: "Eat All Day Get Big Easy" },
+  { lang: "English 3", phrase: "Every Amateur Does Get Better Eventually" },
+  { lang: "English 4", phrase: "Elvis Always Dug Good Banana Elvis" },
+  { lang: "English 5", phrase: "Even After Death Gary Busey Exists" },
+  { lang: "English 6", phrase: "Elephants And Dogs Grow Big Ears" },
+  { lang: "English 7", phrase: "Every Acid Dealer Gets Busted Eventually" },
+  { lang: "English 8", phrase: "Eat Apples Daily Get Big Energy" },
+  { lang: "English 9", phrase: "Eat A Dog Get Big Eggs" },
+  { lang: "English 10", phrase: "Every American Dog Gets Bones Easily" },
+  { lang: "English 11", phrase: "Every Awesome Dude Gets Better Everytime" },
+  { lang: "English 12", phrase: "Even Angels Deserve Great Big Eggs" },
+  { lang: "Spanish", phrase: "En El Desierto Galopa Un Burro Enfermo" },
+  { lang: "Spanish 2", phrase: "El Abuelo Solo Desea Guiso Barato E..." },
+  { lang: "French", phrase: "Elle A Des Gars Bien Elevés" },
+  { lang: "French 2", phrase: "Ephémère Aube De Grâce Brillante Et..." },
+  { lang: "Italian", phrase: "Enrico A Dato Grosse Botte E..." },
+  { lang: "Dutch", phrase: "Een Aap Die Geen Bananen Eet" },
+  { lang: "Swedish", phrase: "En Arg Duva Går Bakom Ekarna" },
+  { lang: "Swedish 2", phrase: "En Anka Dricker Gärna Blåbärs-Extrakt" },
+  { lang: "Finnish", phrase: "Esa Antoi Danielille Grilli-Bileet E..." },
+  { lang: "Danish", phrase: "En Alternativ Dame Går Bare Ensom" },
+  { lang: "Norwegian", phrase: "En Annen Dag Går Bare Etterpå" },
+  { lang: "Portuguese", phrase: "Ela Acha Doce Gostar Basta Entender" },
+  { lang: "Russian", phrase: "Если Анна Дает Гитарный Бой Е..." },
+  { lang: "Polish", phrase: "Ewa Atakuje Dom Gdy Brat E..." },
+  { lang: "Czech", phrase: "Eda A Dana Goli B... E..." },
+  { lang: "Hungarian", phrase: "Egy Apró Darab Gitár Bolondít El" },
+  { lang: "Turkish", phrase: "En Az Dün Gibi Başarı E..." },
+  { lang: "Greek", phrase: "Ένας Άλλος Δίνει Γεύση Βαθιά Ε..." },
+  { lang: "Japanese", phrase: "Eddie Ate Dynamite..." }
+];
+
 export const RIFFS: Riff[] = [
   // --- 6-STRING GUITAR (101 RIFFS) ---
   { id: 'g1', title: 'Midnight Strum', description: 'A foundational acoustic pattern in G Major.', pattern: 'D D U U D U', chords: 'G - C - D - G', nashvilleNumbers: '1 - 4 - 5 - 1', category: 'guitar' },
