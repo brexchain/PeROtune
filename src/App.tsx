@@ -50,12 +50,10 @@ export default function App() {
   const [playingRiff, setPlayingRiff] = useState<{ id: string; activeIndex: number } | null>(null);
   const [showPerfectFlash, setShowPerfectFlash] = useState(false);
   const [tunedStrings, setTunedStrings] = useState<string[]>([]);
-  const playbackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const playbackTimeoutsRef = useRef<NodeJS.Timeout[]>([]);
   const audioCtxRef = useRef<AudioContext | null>(null);
 
-  const handlePlayRiff = (riff: Riff) => {
-    if (!riff.pattern && !riff.chords) return;
-    
+  const playTone = (noteStr: string, startTime: number, duration: number = 0.5) => {
     if (!audioCtxRef.current) {
         audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
     }
@@ -74,84 +72,121 @@ export default function App() {
         return freq * (referenceFreq / 440);
     };
 
-    const playTone = (noteStr: string, startTime: number, duration: number = 0.5) => {
-        const match = noteStr.match(/^([A-G][#b]?)([0-8])?$/i);
-        if (!match && !/^\d$/.test(noteStr)) return;
+    const match = noteStr.match(/^([A-G][#b]?)([0-8])?$/i);
+    if (!match && !/^\d$/.test(noteStr)) return;
 
-        let freq = 0;
-        if (match) {
-            const noteName = match[1];
-            const octave = match[2] ? parseInt(match[2]) : 3;
-            freq = getFreq(noteName, octave);
-        } else {
-            const map = ['E2', 'A2', 'D3', 'G3', 'B3', 'E4'];
-            const note = map[parseInt(noteStr) % 6];
-            const m = note.match(/^([A-G][#b]?)([0-8])?$/i);
-            freq = getFreq(m![1], parseInt(m![2]));
-        }
+    let freq = 0;
+    if (match) {
+        const noteName = match[1];
+        const octave = match[2] ? parseInt(match[2]) : 3;
+        freq = getFreq(noteName, octave);
+    } else {
+        const map = ['E2', 'A2', 'D3', 'G3', 'B3', 'E4'];
+        const note = map[parseInt(noteStr) % 6];
+        const m = note.match(/^([A-G][#b]?)([0-8])?$/i);
+        freq = getFreq(m![1], parseInt(m![2]));
+    }
 
-        const osc = ctx.createOscillator();
-        const osc2 = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'triangle';
-        osc2.type = 'sine';
-        osc.frequency.setValueAtTime(freq, startTime);
-        osc2.frequency.setValueAtTime(freq * 2.01, startTime); 
-        gain.gain.setValueAtTime(0, startTime);
-        gain.gain.linearRampToValueAtTime(0.25, startTime + 0.01);
-        gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
-        const filter = ctx.createBiquadFilter();
-        filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(2000, startTime);
-        filter.frequency.exponentialRampToValueAtTime(400, startTime + duration);
-        osc.connect(gain);
-        osc2.connect(gain);
-        gain.connect(filter);
-        filter.connect(ctx.destination);
-        osc.start(startTime);
-        osc2.start(startTime);
-        osc.stop(startTime + duration);
-        osc2.stop(startTime + duration);
-    };
+    const osc = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    const gain = ctx.createGain();
+    
+    osc.type = 'triangle';
+    osc2.type = 'sine';
+    osc.frequency.setValueAtTime(freq, startTime);
+    osc2.frequency.setValueAtTime(freq * 2.01, startTime); 
+    
+    gain.gain.setValueAtTime(0, startTime);
+    gain.gain.linearRampToValueAtTime(0.55, startTime + 0.005);
+    gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+    
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(3000, startTime);
+    filter.frequency.exponentialRampToValueAtTime(500, startTime + duration);
+    
+    osc.connect(gain);
+    osc2.connect(gain);
+    gain.connect(filter);
+    filter.connect(ctx.destination);
+    
+    osc.start(startTime);
+    osc2.start(startTime);
+    osc.stop(startTime + duration);
+    osc2.stop(startTime + duration);
+  };
+
+  const handlePlayRiff = (riff: Riff) => {
+    if (!riff.pattern && !riff.chords) return;
+    
+    if (!audioCtxRef.current) {
+        audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+    }
+    const ctx = audioCtxRef.current;
+    if (ctx.state === 'suspended') ctx.resume();
+
+    // Clear all pending timeouts
+    playbackTimeoutsRef.current.forEach(t => clearTimeout(t));
+    playbackTimeoutsRef.current = [];
 
     setPlayedReferenceNote(riff.title);
 
     if (riff.pattern) {
         const cleanPattern = riff.pattern.replace(/\(Riff\)|\/|resonate/g, '');
         const patternTokens = cleanPattern.split(/\s+/).filter(t => t.trim().length > 0);
-        const tempo = 0.45;
-        const loopGap = 1.6;
+        
+        let tempo = 0.4;
+        if (riff.title.includes('Sandman') || riff.title.includes('Paranoid')) tempo = 0.22;
+        if (riff.title.includes('Smoke') || riff.title.includes('Iron Man')) tempo = 0.5;
+        if (riff.title.includes('Stairway') || riff.title.includes('Hallelujah')) tempo = 0.6;
+        if (riff.title.includes('Elite')) tempo = 0.25;
+
+        const loopGap = 1.0;
 
         [0, 1].forEach(loopIndex => {
             const loopOffset = loopIndex * (patternTokens.length * tempo + loopGap);
             patternTokens.forEach((token, i) => {
-                let noteToPlay = token;
-                if (['D', 'U', 'P', 'I', 'M', 'A', 'X', 'S'].includes(token.toUpperCase())) {
-                    const rootMatch = riff.chords?.split('-')[0].trim().match(/^[A-G]([#b])?/);
-                    noteToPlay = rootMatch ? rootMatch[0] + '3' : 'G3';
-                }
                 const startTime = loopOffset + (i * tempo);
-                playTone(noteToPlay, ctx.currentTime + startTime, 0.4);
-                setTimeout(() => setPlayingRiff({ id: riff.id, activeIndex: i }), startTime * 1000);
+                
+                if (token !== '.' && token !== '_' && token !== '-') {
+                  let noteToPlay = token;
+                  if (['D', 'U', 'P', 'I', 'M', 'A', 'X', 'S'].includes(token.toUpperCase())) {
+                      const rootMatch = riff.chords?.split('-')[0].trim().match(/^[A-G]([#b])?/);
+                      noteToPlay = rootMatch ? rootMatch[0] + '3' : 'G3';
+                  }
+                  playTone(noteToPlay, ctx.currentTime + startTime, 0.5);
+                }
+                
+                const t = setTimeout(() => {
+                  setPlayingRiff({ id: riff.id, activeIndex: i });
+                  if (loopIndex === 1 && i === patternTokens.length - 1) {
+                    setPlayingRiff(null);
+                  }
+                }, startTime * 1000);
+                playbackTimeoutsRef.current.push(t);
             });
         });
-        setTimeout(() => setPlayingRiff(null), (2 * (patternTokens.length * tempo + loopGap)) * 1000);
     } else if (riff.chords) {
         const chords = riff.chords.split('-').map(c => c.trim());
-        const tempo = 1.0;
-        const loopGap = 1.6;
+        const tempo = 0.8;
+        const loopGap = 1.2;
         [0, 1].forEach(loopIndex => {
             const loopOffset = loopIndex * (chords.length * tempo + loopGap);
             chords.forEach((chord, i) => {
                 const rootMatch = chord.match(/^[A-G]([#b])?/);
                 if (rootMatch) {
                     const startTime = loopOffset + (i * tempo);
-                    playTone(rootMatch[0] + '3', ctx.currentTime + startTime, 0.7);
-                    setTimeout(() => setPlayingRiff({ id: riff.id, activeIndex: i }), startTime * 1000);
+                    playTone(rootMatch[0] + '3', ctx.currentTime + startTime, 0.8);
+                    const t = setTimeout(() => {
+                      setPlayingRiff({ id: riff.id, activeIndex: i });
+                      if (loopIndex === 1 && i === chords.length - 1) {
+                        setPlayingRiff(null);
+                      }
+                    }, startTime * 1000);
+                    playbackTimeoutsRef.current.push(t);
                 }
             });
         });
-        setTimeout(() => setPlayingRiff(null), (2 * (chords.length * tempo + loopGap)) * 1000);
     }
   };
   
@@ -615,6 +650,11 @@ export default function App() {
                   isActive={isActive}
                   onStartMic={start}
                   onStopMic={stop}
+                  onPlayNote={(note) => {
+                    const ctx = audioCtxRef.current || new (window.AudioContext || (window as any).webkitAudioContext)();
+                    if (!audioCtxRef.current) audioCtxRef.current = ctx as AudioContext;
+                    playTone(note, (audioCtxRef.current as AudioContext).currentTime, 0.4);
+                  }}
                   tunedStrings={tunedStrings}
                   allStrings={getStrings()}
                 />

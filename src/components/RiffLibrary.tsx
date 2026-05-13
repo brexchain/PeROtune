@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Music, ArrowRight, Heart, Star, Play } from 'lucide-react';
+import { Music, ArrowRight, Heart, Star, Play, X, ExternalLink } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { RIFFS, InstrumentCategory, Riff } from '../constants';
 
@@ -73,21 +73,32 @@ export function RiffLibrary({ theme = 'dark', category = 'guitar', onPlayRiff, p
     return saved ? JSON.parse(saved) : [];
   });
   
+  const [hiddenIds, setHiddenIds] = useState<string[]>(() => {
+    const saved = localStorage.getItem('perotuner-hidden-riffs');
+    return saved ? JSON.parse(saved) : [];
+  });
+
   const [visibleCount, setVisibleCount] = useState(10);
   const [flippedIds, setFlippedIds] = useState<string[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
-  const filteredRiffs = category === 'all' 
+  const baseRiffs = category === 'all' 
     ? RIFFS 
     : RIFFS.filter(r => r.category === category);
+
+  const filteredRiffs = baseRiffs.filter(r => !hiddenIds.includes(r.id));
     
   const pagedRiffs = filteredRiffs.slice(0, visibleCount);
-  const favoriteRiffs = RIFFS.filter(r => favorites.includes(r.id));
+  const favoriteRiffs = RIFFS.filter(r => favorites.includes(r.id) && !hiddenIds.includes(r.id));
 
   useEffect(() => {
     localStorage.setItem('perotuner-favorites', JSON.stringify(favorites));
   }, [favorites]);
+
+  useEffect(() => {
+    localStorage.setItem('perotuner-hidden-riffs', JSON.stringify(hiddenIds));
+  }, [hiddenIds]);
 
   useEffect(() => {
     // Reset count when category changes
@@ -126,6 +137,11 @@ export function RiffLibrary({ theme = 'dark', category = 'guitar', onPlayRiff, p
     setFlippedIds(prev => 
       prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id]
     );
+  };
+
+  const hideRiff = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    setHiddenIds(prev => [...prev, id]);
   };
 
   return (
@@ -184,6 +200,13 @@ export function RiffLibrary({ theme = 'dark', category = 'guitar', onPlayRiff, p
                             className="p-2.5 rounded-full hover:bg-black/10 transition-colors"
                           >
                             <Heart size={18} className={cn(favorites.includes(riff.id) ? "fill-emerald-500 text-emerald-500" : "text-emerald-500/40")} />
+                          </button>
+                          <button 
+                            onClick={(e) => hideRiff(e, riff.id)}
+                            className="p-2.5 rounded-full hover:bg-red-500/10 text-red-500/40 hover:text-red-500 transition-colors"
+                            title="Remove from library"
+                          >
+                            <X size={18} />
                           </button>
                         </div>
                         <div>
@@ -250,6 +273,19 @@ export function RiffLibrary({ theme = 'dark', category = 'guitar', onPlayRiff, p
                             <p className="text-xs text-white/60 leading-relaxed font-medium px-4">
                               {riff.description}
                             </p>
+                          </div>
+
+                          <div className="mt-2">
+                             <a 
+                                href={`https://www.google.com/search?q=${encodeURIComponent(riff.title + " chords and lyrics")}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500/30 transition-all"
+                             >
+                                <ExternalLink size={12} />
+                                Find Chords
+                             </a>
                           </div>
                         </div>
 
@@ -325,6 +361,15 @@ export function RiffLibrary({ theme = 'dark', category = 'guitar', onPlayRiff, p
                         )}
                       >
                         <Heart size={20} className={cn(favorites.includes(riff.id) && "fill-current")} />
+                      </button>
+                      <button 
+                        onClick={(e) => hideRiff(e, riff.id)}
+                        className={cn(
+                          "p-3 rounded-2xl transition-all duration-300 group/close hover:bg-red-500/10",
+                          isDark ? "bg-white/5 text-white/20" : "bg-black/5 text-black/20"
+                        )}
+                      >
+                        <X size={20} className="group-hover/close:text-red-500" />
                       </button>
                     </div>
 
@@ -408,6 +453,19 @@ export function RiffLibrary({ theme = 'dark', category = 'guitar', onPlayRiff, p
                            <p className="text-lg font-bold text-white/70 italic">"{riff.description}"</p>
                         </div>
                       )}
+
+                      <div className="mt-2">
+                         <a 
+                            href={`https://www.google.com/search?q=${encodeURIComponent(riff.title + " chords and lyrics")}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-white/10 border border-white/20 text-white text-[11px] font-black uppercase tracking-widest hover:bg-white/20 transition-all"
+                         >
+                            <ExternalLink size={14} />
+                            Find Full Chords & Lyrics
+                         </a>
+                      </div>
                     </div>
 
                     <div className="mt-8 flex gap-3">
@@ -502,6 +560,12 @@ export function RiffLibrary({ theme = 'dark', category = 'guitar', onPlayRiff, p
                        >
                          <Heart size={14} className={cn(favorites.includes(riff.id) && "fill-current")} />
                        </button>
+                       <button 
+                        onClick={(e) => hideRiff(e, riff.id)}
+                        className="p-2 rounded-xl hover:bg-red-500/10 text-red-500/20 hover:text-red-500 transition-all"
+                       >
+                         <X size={14} />
+                       </button>
                     </div>
                     <div>
                       <span className="text-[10px] font-mono text-emerald-500/50 mb-1 block">#{String(idx + 1).padStart(3, '0')}</span>
@@ -557,6 +621,19 @@ export function RiffLibrary({ theme = 'dark', category = 'guitar', onPlayRiff, p
                        <div className="space-y-1">
                           <span className="text-[8px] uppercase tracking-[0.3em] text-emerald-500/40 font-black">Guitarist Tip</span>
                           <p className="text-xs font-bold text-white/40 leading-snug px-2">"{riff.description}"</p>
+                       </div>
+
+                       <div className="mt-2">
+                         <a 
+                           href={`https://www.google.com/search?q=${encodeURIComponent(riff.title + " chords and lyrics")}`}
+                           target="_blank"
+                           rel="noreferrer"
+                           onClick={(e) => e.stopPropagation()}
+                           className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 border border-white/10 text-white/60 text-[9px] font-black uppercase tracking-widest hover:bg-white/20 hover:text-white transition-all mx-auto w-fit"
+                         >
+                           <ExternalLink size={12} />
+                           Search Chords
+                         </a>
                        </div>
                     </div>
                     <div className="absolute bottom-6 pt-4 border-t border-white/5 w-[80%]">
