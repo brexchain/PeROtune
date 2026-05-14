@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Settings, Mic, MicOff, Music, Volume2, Sparkles, Clock, Compass, Zap, LayoutGrid, Sun, Moon, MessageCircle, Languages, Maximize } from 'lucide-react';
+import { Settings, Mic, MicOff, Music, Volume2, Sparkles, Clock, Compass, Zap, LayoutGrid, Sun, Moon, MessageCircle, Languages, Maximize, Activity, Brain } from 'lucide-react';
 import { usePitchDetection } from './hooks/usePitchDetection';
 import { GuitarHub } from './components/GuitarHub';
 import { NeedleBar } from './components/NeedleBar';
 import { ToneReference } from './components/ToneReference';
 import { RiffLibrary } from './components/RiffLibrary';
 import { Metronome } from './components/Metronome';
+import { JamStation } from './components/JamStation';
+import { EarTraining } from './components/EarTraining';
+import { QuizView } from './components/QuizView';
 import { TheoryView } from './components/TheoryView';
 import { CircleOfFifths } from './components/CircleOfFifths';
 import { GuitarStringsBackground } from './components/GuitarStringsBackground';
@@ -17,7 +20,7 @@ import { cn } from './lib/utils';
 import { GUITAR_STRINGS, UKULELE_STRINGS, TWELVE_STRING_STRINGS, InstrumentCategory, Riff, EADGBE_MNEMONICS } from './constants';
 import { LanguageProvider, Language, translations, getTranslation } from './lib/i18n';
 
-type ViewMode = 'tuner' | 'metronome' | 'riffs' | 'theory';
+type ViewMode = 'tuner' | 'metronome' | 'riffs' | 'theory' | 'jam' | 'ear' | 'quiz';
 
 const DEFAULT_SETTINGS: StudioSettings = {
   bgColor: '#0a0a0a',
@@ -808,20 +811,55 @@ export default function App() {
                 />
               </motion.div>
             )}
+
+            {activeView === 'jam' && (
+              <motion.div
+                key="jam"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+              >
+                <JamStation theme={theme} accentColor={settings.accentColor} />
+              </motion.div>
+            )}
+
+            {activeView === 'ear' && (
+              <motion.div
+                key="ear"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+              >
+                <EarTraining theme={theme} accentColor={settings.accentColor} />
+              </motion.div>
+            )}
+
+            {activeView === 'quiz' && (
+              <motion.div
+                key="quiz"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+              >
+                <QuizView theme={theme} accentColor={settings.accentColor} />
+              </motion.div>
+            )}
           </AnimatePresence>
         </main>
 
         {/* Professional Bottom Navigation (iOS Style) */}
-        <div className="fixed bottom-0 left-0 right-0 p-4 sm:p-8 flex justify-center z-50 pointer-events-none pb-[calc(env(safe-area-inset-bottom)+1rem)]">
+        <div className="fixed bottom-0 left-0 right-0 p-2 sm:p-8 flex justify-center z-50 pointer-events-none pb-[calc(env(safe-area-inset-bottom)+0.2rem)]">
           <nav className={cn(
-            "pointer-events-auto flex items-center gap-1 sm:gap-2 p-1.5 sm:p-2 rounded-3xl border backdrop-blur-2xl transition-all shadow-2xl max-w-[95vw] overflow-hidden",
+            "pointer-events-auto flex items-center gap-0.5 p-1 rounded-[2rem] border backdrop-blur-2xl transition-all shadow-2xl max-w-[98vw] overflow-hidden",
             theme === 'dark' ? "bg-black/60 border-white/10" : "bg-white/80 border-black/10"
           )}>
             {[
               { id: 'tuner', label: t('tuner'), icon: Volume2 },
+              { id: 'riffs', label: t('riffs'), icon: LayoutGrid },
+              { id: 'jam', label: t('jamStation'), icon: Activity },
+              { id: 'ear', label: t('earTraining'), icon: Brain },
+              { id: 'quiz', label: t('quizShortcut'), icon: Music },
               { id: 'theory', label: t('theory'), icon: Compass },
-              { id: 'metronome', label: t('clock'), icon: Clock },
-              { id: 'riffs', label: t('riffs'), icon: LayoutGrid }
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -830,22 +868,22 @@ export default function App() {
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
                 className={cn(
-                  "relative flex flex-col items-center gap-1 px-3 sm:px-5 py-2 sm:py-3 rounded-2xl transition-all duration-300 group cursor-pointer hover:scale-105 active:scale-95",
+                  "relative flex flex-col items-center gap-1 px-2.5 sm:px-5 py-2 sm:py-3 rounded-[1.5rem] transition-all duration-300 group cursor-pointer hover:scale-105 active:scale-95 flex-1 min-w-[48px] sm:min-w-[80px]",
                   activeView === tab.id 
                     ? "text-white" 
                     : theme === 'dark' ? "text-white/30 hover:text-white/60" : "text-black/30 hover:text-black/60"
                 )}
               >
-                <tab.icon size={20} className={cn(
+                <tab.icon size={16} className={cn(
                   "transition-transform duration-300 group-hover:scale-110",
                   activeView === tab.id ? "scale-110" : ""
                 )} />
-                <span className="text-[9px] uppercase tracking-widest font-black">{tab.label}</span>
+                <span className="text-[7px] sm:text-[9px] uppercase tracking-tighter font-black leading-none">{tab.label}</span>
                 
                 {activeView === tab.id && (
                   <motion.div
                     layoutId="active-tab"
-                    className="absolute inset-0 rounded-2xl z-[-1]"
+                    className="absolute inset-0 rounded-[1.5rem] z-[-1]"
                     style={{ backgroundColor: settings.accentColor }}
                   />
                 )}

@@ -60,167 +60,66 @@ export function GuitarHub({ currentNote, playedNote, playingRiff, frequency, cen
         <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(0,0,0,0.2) 41px)' }} />
       </div>
 
-      {/* Note Ring - Discrete Boxes */}
-      <div className="absolute inset-4 rounded-full border border-white/5 pointer-events-none">
-        {['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'].map((note, i) => {
-          const angle = (i * 30) - 90;
-          const isActive = currentNote === note;
-          return (
-            <div 
-              key={note}
-              className="absolute w-full h-full"
-              style={{ transform: `rotate(${angle}deg)` }}
-            >
-              <div 
-                className={cn(
-                  "absolute right-2 top-1/2 -translate-y-1/2 -rotate-90 min-w-[28px] h-8 flex items-center justify-center rounded-md border transition-all duration-300",
-                  isActive 
-                    ? "shadow-[0_0_15px_rgba(0,0,0,0.3)] scale-125" 
-                    : isDark ? "bg-transparent border-transparent text-white/10" : "bg-transparent border-transparent text-black/10"
-                )}
-                style={{ 
-                  transform: `rotate(${-angle}deg) translateY(-50%)`,
-                  backgroundColor: isActive ? `${accentColor}33` : undefined,
-                  borderColor: isActive ? `${accentColor}80` : undefined,
-                  color: isActive ? accentColor : undefined
-                }}
-              >
-                <span className="text-[10px] font-mono font-bold">{note}</span>
-              </div>
-            </div>
-          );
-        })}
+
+      {/* Guitar Neck (Hals) - Extending to the left and right background */}
+      <div className="absolute left-[-500px] right-[-500px] h-32 md:h-40 bg-[#1a0f0a] border-y border-[#3d251a] shadow-2xl z-0 overflow-hidden">
+        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 80px, #000 81px)' }} />
+        <div className="absolute inset-0 bg-linear-to-b from-white/5 to-black/20" />
+        
+        {/* Laser Fret Markers */}
+        <div className="absolute inset-0 flex justify-around items-center opacity-30">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" />
+          ))}
+        </div>
       </div>
 
-        {/* Center Soundhole Depth */}
-      <div className="absolute w-56 h-56 rounded-full bg-black shadow-[inset_0_0_50px_rgba(0,0,0,1)] overflow-hidden flex items-center justify-center">
-        {/* Circle of Fifths Centerpiece */}
-        <div className="absolute inset-4 opacity-80 group-hover:opacity-100 transition-opacity">
-          <CircleOfFifths 
-            activeNote={playedNote || currentNote} 
-            accentColor={accentColor} 
-            theme="dark" 
-          />
-        </div>
-
-        {/* Strings */}
-        <div 
-          className="absolute inset-0 flex flex-col justify-center px-6 transition-all duration-500"
-          style={{ gap: `${stringGap}px` }}
-        >
-          {strings.map((string, idx) => {
-            const isMatched = currentNote === string.note || playedNote === string.note;
-            const isTuned = isMatched && Math.abs(cents) <= 2;
-            
-            // Realistic guitar string thickness approximation
-            const thickness = 0.8 + (idx * 0.4);
-            const isHighString = idx < 2;
-            const stringColor = isMatched 
-              ? accentColor 
-              : (isHighString ? '#cbd5e1' : '#a8a29e');
-
-            return (
-              <div key={idx} className="relative h-1 w-full flex items-center">
-                {/* String Aura */}
-                <AnimatePresence mode="wait">
-                  {isMatched && (
-                    <motion.div 
-                      className={cn(
-                        "absolute inset-0 h-4 -top-1.5 rounded-full blur-md",
-                        isTuned ? "bg-emerald-400/20" : "bg-white/10"
-                      )}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                    />
-                  )}
-                </AnimatePresence>
-
-                {/* The String */}
-                <motion.div 
-                  className="w-full z-10 transition-colors duration-500 rounded-full"
-                  style={{ 
-                    height: `${thickness}px`,
-                    backgroundColor: stringColor,
-                    boxShadow: isMatched ? `0 0 12px ${accentColor}` : '0 1px 2px rgba(0,0,0,0.5)',
-                    backgroundImage: !isHighString ? 'linear-gradient(90deg, rgba(0,0,0,0.2) 0%, transparent 50%, rgba(0,0,0,0.2) 100%)' : 'none'
-                  }}
-                  animate={isMatched ? {
-                    y: isTuned ? [0, -0.2, 0.2, -0.2, 0.2, 0] : [0, -0.5, 0.5, -0.5, 0.2, -0.2, 0],
-                    opacity: isTuned ? [0.8, 1, 0.8] : [0.6, 1, 0.6]
-                  } : {}}
-                  transition={{ 
-                    duration: isTuned ? 0.08 : 0.15, 
-                    repeat: Infinity,
-                    repeatType: "mirror"
-                  }}
-                />
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Active Note Center Circle */}
-        <AnimatePresence>
-          {playingRiff && (
+      {/* Modern High-End Guitar Body - Wood Texture */}
+      <div 
+        className="w-full h-full rounded-[100px] border-4 border-[#3d251a] shadow-[0_30px_100px_-20px_rgba(0,0,0,0.8)] relative flex items-center justify-center overflow-hidden"
+        style={{ 
+          background: 'radial-gradient(circle at center, #4d2b1e 0%, #2a1810 70%, #1a0f0a 100%)',
+          boxShadow: `inset 0 0 100px rgba(0,0,0,0.5), 0 40px 100px -20px black`
+        }}
+      >
+        {/* Grain simulation */}
+        <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 1px, #000 2px), repeating-linear-gradient(90deg, transparent, transparent 20px, rgba(255,255,255,0.05) 21px)' }} />
+        
+        {/* Laser Strings - Dynamic and Interactive */}
+        <div className="absolute inset-x-0 h-48 flex flex-col justify-between py-4 z-20 pointer-events-none">
+          {[...Array(6)].map((_, i) => (
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="absolute inset-0 z-40 flex flex-col items-center justify-center pointer-events-none"
-            >
-              <div className="flex gap-2">
-                {[...Array(8)].map((_, i) => (
-                  <motion.div
-                    key={i}
-                    animate={{ 
-                      scale: playingRiff.activeIndex % 8 === i ? 1.2 : 1,
-                      backgroundColor: playingRiff.activeIndex % 8 === i ? accentColor : 'rgba(255,255,255,0.05)',
-                      height: playingRiff.activeIndex % 8 === i ? '24px' : '16px'
-                    }}
-                    className="w-1.5 rounded-full"
-                  />
-                ))}
-              </div>
+              key={i}
+              initial={{ scaleX: 0, opacity: 0 }}
+              animate={{ 
+                scaleX: 1, 
+                opacity: (currentNote || playedNote) ? 0.8 : 0.1,
+                boxShadow: (currentNote || playedNote) ? `0 0 15px ${accentColor}` : 'none',
+                backgroundColor: (currentNote || playedNote) ? accentColor : 'rgba(255,255,255,0.1)'
+              }}
+              className="h-[1px] w-full origin-left"
+              style={{ 
+                boxShadow: `0 0 10px rgba(0,0,0,0.5)`
+              }}
+            />
+          ))}
+        </div>
 
-            </motion.div>
-          )}
-
-          {currentNote && !playingRiff && (
-              <motion.div 
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ 
-                  scale: Math.abs(cents) <= 2 ? 1.2 : 1, 
-                  opacity: 1,
-                  backgroundColor: Math.abs(cents) <= 2 ? `${accentColor}33` : 'rgba(255,255,255,0.05)'
-                }}
-                exit={{ scale: 0.8, opacity: 0 }}
-                className="absolute w-28 h-28 rounded-full border flex flex-col items-center justify-center z-30 pointer-events-none backdrop-blur-sm shadow-2xl"
-                style={{ 
-                  borderColor: Math.abs(cents) <= 2 ? accentColor : `${accentColor}33`,
-                  boxShadow: Math.abs(cents) <= 2 ? `0 0 30px ${accentColor}4D` : 'none'
-                }}
-              >
-                <span className={cn(
-                  "text-[9px] uppercase tracking-[0.3em] font-black mb-1 transition-opacity",
-                  Math.abs(cents) <= 2 ? "opacity-100" : "opacity-40"
-                )} style={{ color: accentColor }}>
-                  {Math.abs(cents) <= 2 ? 'Perfect' : 'Tuning'}
-                </span>
-                <span className={cn(
-                  "text-5xl font-black italic text-white leading-none tracking-tighter transition-all duration-200",
-                  Math.abs(cents) <= 2 ? "scale-110 drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]" : ""
-                )}>
-                  {currentNote}
-                </span>
-                <div className="mt-1 flex items-center gap-1">
-                   <div className={cn("w-1 h-1 rounded-full", Math.abs(cents) <= 2 ? "bg-emerald-400" : "bg-white/20")} />
-                   <div className={cn("w-1 h-1 rounded-full", Math.abs(cents) <= 2 ? "bg-emerald-400" : "bg-white/20")} />
-                   <div className={cn("w-1 h-1 rounded-full", Math.abs(cents) <= 2 ? "bg-emerald-400" : "bg-white/20")} />
-                </div>
-              </motion.div>
-          )}
-        </AnimatePresence>
+        {/* Inner Hole Core - Just the Circle of Fifths now */}
+        <div 
+          className="relative w-80 h-80 md:w-96 md:h-96 rounded-full bg-black shadow-[inset_0_0_80px_rgba(0,0,0,1),0_0_40px_rgba(16,185,129,0.1)] overflow-hidden flex items-center justify-center z-30"
+          style={{ border: `12px solid #1a0f0a` }}
+        >
+          {/* Circle of Fifths as the primary interactive center */}
+          <div className="absolute inset-6">
+            <CircleOfFifths 
+              activeNote={playedNote || currentNote} 
+              accentColor={accentColor} 
+              theme="dark"
+              isLarge={true}
+            />
+          </div>
+        </div>
       </div>
 
       {/* Sonic Aura pulse */}

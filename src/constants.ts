@@ -48,6 +48,33 @@ export interface Riff {
   category: InstrumentCategory;
 }
 
+export interface BackingTrack {
+  id: string;
+  title: string;
+  style: string;
+  bpm: number;
+  key: string;
+  progression: string[];
+  description: string;
+}
+
+export const BACKING_TRACKS: BackingTrack[] = [
+  { id: 'bt1', title: 'Midnight Blues', style: 'Blues', bpm: 80, key: 'A', progression: ['A7', 'D7', 'A7', 'E7'], description: 'Slow 12-bar blues in A with a shuffle feel.' },
+  { id: 'bt2', title: 'Desert Rock', style: 'Rock', bpm: 120, key: 'Em', progression: ['Em', 'G', 'D', 'A'], description: 'Driving alternative rock rhythm in E minor.' },
+  { id: 'bt3', title: 'Chill Lo-Fi', style: 'Lo-Fi', bpm: 70, key: 'Cmaj7', progression: ['Cmaj7', 'Am7', 'Dm7', 'G7'], description: 'Relaxed lo-fi jazzy progression for melodic exploration.' },
+  { id: 'bt4', title: 'Funk Soul', style: 'Funk', bpm: 105, key: 'D7', progression: ['D7', 'G7', 'D7', 'G7'], description: 'Sharp syncopated funk rhythm with a groovy bassline.' }
+];
+
+export const TRAINING_NOTES = [
+  { note: 'C4', freq: 261.63 },
+  { note: 'D4', freq: 293.66 },
+  { note: 'E4', freq: 329.63 },
+  { note: 'F4', freq: 349.23 },
+  { note: 'G4', freq: 392.00 },
+  { note: 'A4', freq: 440.00 },
+  { note: 'B4', freq: 493.88 }
+];
+
 export interface Mnemonic {
   lang: string;
   phrase: string;

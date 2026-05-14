@@ -174,7 +174,7 @@ export function CircleOfFifths({ activeNote, accentColor, theme, isLarge = false
                 dominantBaseline="middle"
                 className={cn(
                   "font-black tracking-tighter transition-all duration-300 pointer-events-none",
-                  isLarge ? "text-[5px]" : "text-[6px]",
+                  isLarge ? "text-[8px]" : "text-[6px]",
                   familyType || isDetected ? "" : (isDark ? "fill-white/30" : "fill-black/30")
                 )}
                 style={{ fill: familyType ? accentColor : (isDetected ? '#10b981' : undefined) }}
@@ -220,7 +220,7 @@ export function CircleOfFifths({ activeNote, accentColor, theme, isLarge = false
                 dominantBaseline="middle"
                 className={cn(
                   "font-bold tracking-tighter transition-all duration-300 uppercase pointer-events-none",
-                  isLarge ? "text-[3px]" : "text-[3.5px]",
+                  isLarge ? "text-[5.5px]" : "text-[3.5px]",
                   familyType || isDetected ? "" : (isDark ? "fill-white/20" : "fill-black/20")
                 )}
                 style={{ fill: familyType ? accentColor : (isDetected ? '#10b981' : undefined) }}
@@ -233,8 +233,8 @@ export function CircleOfFifths({ activeNote, accentColor, theme, isLarge = false
         
         {/* Center Indicator */}
         <circle 
-          cx="50" cy="50" r="16" 
-          fill={isDark ? "rgba(0,0,0,0.4)" : "rgba(255,255,255,0.4)"} 
+          cx="50" cy="50" r={isLarge ? 17 : 16} 
+          fill={isDark ? "rgba(0,0,0,0.6)" : "rgba(255,255,255,0.6)"} 
           className="cursor-pointer"
           onClick={() => setSelectedIdx(null)}
         />
@@ -245,7 +245,10 @@ export function CircleOfFifths({ activeNote, accentColor, theme, isLarge = false
                     y="48"
                     textAnchor="middle"
                     dominantBaseline="middle"
-                    className="text-[10px] font-serif font-black italic"
+                    className={cn(
+                      "font-serif font-black italic transition-all duration-300",
+                      isLarge ? "text-[14px]" : "text-[10px]"
+                    )}
                     style={{ fill: selectedIdx !== null ? accentColor : '#10b981' }}
                 >
                     {getLocalizedNote(selectedIdx !== null ? FIFTHS[selectedIdx] : normalizedActive!)}
@@ -255,7 +258,10 @@ export function CircleOfFifths({ activeNote, accentColor, theme, isLarge = false
                     y="54"
                     textAnchor="middle"
                     dominantBaseline="middle"
-                    className="text-[3px] uppercase tracking-widest font-black opacity-40 italic"
+                    className={cn(
+                      "uppercase tracking-widest font-black opacity-40 italic transition-all duration-300",
+                      isLarge ? "text-[4px]" : "text-[3px]"
+                    )}
                     style={{ fill: selectedIdx !== null ? accentColor : '#10b981' }}
                 >
                     {selectedIdx !== null ? "Selected Key" : "Detected"}
