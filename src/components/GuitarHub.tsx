@@ -92,7 +92,7 @@ export function GuitarHub({ currentNote, playedNote, playingRiff, frequency, cen
         })}
       </div>
 
-      {/* Center Soundhole Depth */}
+        {/* Center Soundhole Depth */}
       <div className="absolute w-56 h-56 rounded-full bg-black shadow-[inset_0_0_50px_rgba(0,0,0,1)] overflow-hidden flex items-center justify-center">
         {/* Circle of Fifths Centerpiece */}
         <div className="absolute inset-4 opacity-80 group-hover:opacity-100 transition-opacity">
@@ -101,35 +101,6 @@ export function GuitarHub({ currentNote, playedNote, playingRiff, frequency, cen
             accentColor={accentColor} 
             theme="dark" 
           />
-        </div>
-
-        {/* Freq Display - Top center of inner hole */}
-        <div className="absolute top-6 flex flex-col items-center z-20">
-          <span className="text-[8px] uppercase tracking-[0.3em] text-white/30 font-mono mb-1">Frequency Monitor</span>
-          <div className="flex flex-col items-center">
-            <div className="flex items-baseline gap-1">
-              <span className={cn(
-                "text-2xl font-mono tracking-tighter transition-colors",
-                frequency > 0 ? "text-white" : "text-white/20"
-              )}>
-                {frequency > 0 ? frequency.toFixed(2) : "000.00"}
-              </span>
-              <span className="text-[10px] text-white/30 font-mono">Hz</span>
-            </div>
-            {currentNote && (
-              <motion.div 
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex items-center gap-1.5 px-2 py-0.5 rounded border mt-1"
-                style={{ backgroundColor: `${accentColor}1A`, borderColor: `${accentColor}33` }}
-              >
-                <span className="text-[9px] uppercase font-mono tracking-widest opacity-60" style={{ color: accentColor }}>Target:</span>
-                <span className="text-[10px] font-mono font-bold" style={{ color: accentColor }}>
-                  {targetFreq.toFixed(2)} Hz
-                </span>
-              </motion.div>
-            )}
-          </div>
         </div>
 
         {/* Strings */}
@@ -141,6 +112,13 @@ export function GuitarHub({ currentNote, playedNote, playingRiff, frequency, cen
             const isMatched = currentNote === string.note || playedNote === string.note;
             const isTuned = isMatched && Math.abs(cents) <= 2;
             
+            // Realistic guitar string thickness approximation
+            const thickness = 0.8 + (idx * 0.4);
+            const isHighString = idx < 2;
+            const stringColor = isMatched 
+              ? accentColor 
+              : (isHighString ? '#cbd5e1' : '#a8a29e');
+
             return (
               <div key={idx} className="relative h-1 w-full flex items-center">
                 {/* String Aura */}
@@ -160,36 +138,23 @@ export function GuitarHub({ currentNote, playedNote, playingRiff, frequency, cen
 
                 {/* The String */}
                 <motion.div 
-                  className="w-full h-[1.5px] z-10 transition-colors duration-500"
+                  className="w-full z-10 transition-colors duration-500 rounded-full"
                   style={{ 
-                    backgroundColor: isMatched ? accentColor : (isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)'),
-                    boxShadow: isMatched ? `0 0 10px ${accentColor}` : 'none'
+                    height: `${thickness}px`,
+                    backgroundColor: stringColor,
+                    boxShadow: isMatched ? `0 0 12px ${accentColor}` : '0 1px 2px rgba(0,0,0,0.5)',
+                    backgroundImage: !isHighString ? 'linear-gradient(90deg, rgba(0,0,0,0.2) 0%, transparent 50%, rgba(0,0,0,0.2) 100%)' : 'none'
                   }}
                   animate={isMatched ? {
-                    y: [0, -0.5, 0.5, -0.5, 0.2, -0.2, 0],
-                    opacity: [0.6, 1, 0.6]
+                    y: isTuned ? [0, -0.2, 0.2, -0.2, 0.2, 0] : [0, -0.5, 0.5, -0.5, 0.2, -0.2, 0],
+                    opacity: isTuned ? [0.8, 1, 0.8] : [0.6, 1, 0.6]
                   } : {}}
                   transition={{ 
-                    duration: 0.15, 
+                    duration: isTuned ? 0.08 : 0.15, 
                     repeat: Infinity,
                     repeatType: "mirror"
                   }}
                 />
-                
-                {/* String Label Box */}
-                <div className={cn(
-                  "absolute -right-10 w-6 h-6 rounded flex items-center justify-center border font-mono text-[10px] transition-all duration-300",
-                  isMatched 
-                    ? "shadow-lg" 
-                    : isDark ? "bg-transparent border-transparent text-white/20" : "bg-transparent border-transparent text-black/20"
-                )}
-                style={{
-                  backgroundColor: isMatched ? `${accentColor}1A` : undefined,
-                  borderColor: isMatched ? `${accentColor}33` : undefined,
-                  color: isMatched ? accentColor : undefined
-                }}>
-                  {string.label}
-                </div>
               </div>
             );
           })}
@@ -217,15 +182,7 @@ export function GuitarHub({ currentNote, playedNote, playingRiff, frequency, cen
                   />
                 ))}
               </div>
-              <div className="mt-4 flex flex-col items-center">
-                <span className="text-[8px] uppercase tracking-widest font-black opacity-40 mb-1">Rhythmic Pulse</span>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-black italic" style={{ color: accentColor }}>
-                    {playingRiff.activeIndex + 1}
-                  </span>
-                  <span className="text-[10px] opacity-30 font-bold">/ 8</span>
-                </div>
-              </div>
+
             </motion.div>
           )}
 

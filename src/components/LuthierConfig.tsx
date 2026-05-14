@@ -15,6 +15,7 @@ interface LuthierConfigProps {
   onClose: () => void;
   settings: StudioSettings;
   onUpdate: (settings: StudioSettings) => void;
+  onReset: () => void;
   theme: 'dark' | 'light';
 }
 
@@ -24,7 +25,7 @@ const PRESET_BGS = {
   light: ['#f5f2ed', '#f1f5f9', '#fafafa', '#fdf2f8', '#ecfdf5', '#fff9db', '#ffffff', '#e0f7fa', '#fce4ec']
 };
 
-export function LuthierConfig({ isOpen, onClose, settings, onUpdate, theme }: LuthierConfigProps) {
+export function LuthierConfig({ isOpen, onClose, settings, onUpdate, onReset, theme }: LuthierConfigProps) {
   const isDark = theme === 'dark';
 
   return (
@@ -165,10 +166,20 @@ export function LuthierConfig({ isOpen, onClose, settings, onUpdate, theme }: Lu
               </section>
             </div>
 
-            <div className="p-6 border-t border-white/10 flex gap-3">
+            <div className="p-6 border-t border-white/10 flex flex-col gap-3">
+              <button 
+                onClick={onReset}
+                className={cn(
+                  "w-full py-2.5 rounded-lg border text-[10px] uppercase tracking-widest font-black flex items-center justify-center gap-2 transition-all",
+                  isDark ? "bg-red-500/10 border-red-500/20 text-red-500 hover:bg-red-500/20" : "bg-red-50/10 border-red-200 text-red-600 hover:bg-red-100"
+                )}
+              >
+                <RefreshCcw size={12} />
+                Restore Factory Defaults
+              </button>
               <button 
                 onClick={onClose}
-                className="flex-1 text-white font-bold py-3 rounded-xl transition-all shadow-lg text-xs uppercase tracking-widest flex items-center justify-center gap-2"
+                className="w-full text-white font-bold py-3 rounded-xl transition-all shadow-lg text-xs uppercase tracking-widest flex items-center justify-center gap-2"
                 style={{ backgroundColor: settings.accentColor, boxShadow: `0 4px 12px ${settings.accentColor}4D` }}
               >
                 <Save size={14} />

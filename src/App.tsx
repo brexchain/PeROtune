@@ -187,6 +187,17 @@ export default function App() {
     }
   };
   
+  const handleResetDefaults = () => {
+    if (window.confirm(translations[language].confirmReset)) {
+      setSettings(DEFAULT_SETTINGS);
+      setTheme('dark');
+      setInstrument('guitar');
+      setReferenceFreq(440);
+      localStorage.removeItem('perotuner-settings');
+      window.location.reload(); // Hard reset to ensure all states are clean
+    }
+  };
+
   const [settings, setSettings] = useState<StudioSettings>(() => {
     const saved = localStorage.getItem('perotuner-settings');
     if (saved) {
@@ -282,13 +293,14 @@ export default function App() {
         onClose={() => setIsConfigOpen(false)}
         settings={settings}
         onUpdate={setSettings}
+        onReset={handleResetDefaults}
         theme={theme}
       />
 
       <div className="relative flex flex-col items-center">
         {/* iOS Style Top Header */}
-        <header className="w-full max-w-4xl flex justify-between items-center p-6 bg-transparent">
-          <div className="flex flex-col">
+        <header className="w-full max-w-7xl flex flex-wrap md:flex-nowrap items-center justify-between p-4 md:p-6 gap-6 md:gap-8">
+          <div className="flex flex-col items-start min-w-[120px] md:flex-1">
             <h1 className={cn(
               "text-lg font-bold tracking-tighter leading-none italic",
               theme === 'dark' ? "text-white" : "text-[#1a1a1a]"
@@ -301,25 +313,42 @@ export default function App() {
             )}>{t('profAmateur')}</span>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 justify-center md:flex-1 order-last md:order-none w-full md:w-auto">
             <button 
               onClick={() => setLanguage(prev => prev === 'de' ? 'en' : 'de')}
               className={cn(
-                "px-3 h-10 rounded-full border flex items-center gap-2 transition-all group",
+                "w-11 h-9 rounded-full border flex items-center justify-center transition-all group overflow-hidden",
                 theme === 'dark' ? "bg-white/5 border-white/5 hover:bg-white/10" : "bg-black/5 border-black/5 hover:bg-black/10"
               )}
+              title={language === 'de' ? "Switch to English" : "Zu Deutsch wechseln"}
             >
-              <Languages size={14} className="opacity-60 group-hover:text-emerald-500 transition-colors" />
-              <span className="text-[10px] font-black uppercase tracking-widest opacity-60 group-hover:opacity-100">{language}</span>
+              <div className="flex flex-col items-center">
+                {language === 'de' ? (
+                  <svg width="18" height="10" viewBox="0 0 5 3" className="shadow-sm">
+                    <rect width="5" height="3" fill="#000"/>
+                    <rect width="5" height="2" y="1" fill="#D00"/>
+                    <rect width="5" height="1" y="2" fill="#FFCE00"/>
+                  </svg>
+                ) : (
+                  <svg width="18" height="10" viewBox="0 0 60 30" className="shadow-sm">
+                    <path d="M0,0 v30 h60 v-30 z" fill="#012169"/>
+                    <path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" strokeWidth="6"/>
+                    <path d="M0,0 L60,30 M60,0 L0,30" stroke="#C8102E" strokeWidth="4"/>
+                    <path d="M30,0 v30 M0,15 h60" stroke="#fff" strokeWidth="10"/>
+                    <path d="M30,0 v30 M0,15 h60" stroke="#C8102E" strokeWidth="6"/>
+                  </svg>
+                )}
+                <span className="text-[6px] font-black uppercase mt-0.5 opacity-40">{language}</span>
+              </div>
             </button>
             <button 
               onClick={() => setTheme(prev => prev === 'dark' ? 'light' : 'dark')}
               className={cn(
-                "w-10 h-10 rounded-full border flex items-center justify-center transition-all",
+                "w-9 h-9 rounded-full border flex items-center justify-center transition-all",
                 theme === 'dark' ? "bg-white/5 border-white/5 hover:bg-white/10" : "bg-black/5 border-black/5 hover:bg-black/10"
               )}
             >
-              {theme === 'dark' ? <Sun size={14} className="opacity-60" /> : <Moon size={14} className="opacity-60" />}
+              {theme === 'dark' ? <Sun size={12} className="opacity-60" /> : <Moon size={12} className="opacity-60" />}
             </button>
             <button 
               onClick={() => {
@@ -335,22 +364,50 @@ export default function App() {
                 }
               }}
               className={cn(
-                "w-10 h-10 rounded-full border flex items-center justify-center transition-all",
+                "w-9 h-9 rounded-full border flex items-center justify-center transition-all",
                 theme === 'dark' ? "bg-white/5 border-white/5 hover:bg-white/10" : "bg-black/5 border-black/5 hover:bg-black/10"
               )}
               title="Reset View"
             >
-              <Maximize size={14} className="opacity-60" />
+              <Maximize size={12} className="opacity-60" />
             </button>
             <button 
               onClick={() => setIsConfigOpen(true)}
               className={cn(
-                "w-10 h-10 rounded-full border flex items-center justify-center transition-all",
+                "w-9 h-9 rounded-full border flex items-center justify-center transition-all",
                 theme === 'dark' ? "bg-white/5 border-white/5 hover:bg-white/10" : "bg-black/5 border-black/5 hover:bg-black/10"
               )}
             >
-              <Settings size={14} className="opacity-60" />
+              <Settings size={12} className="opacity-60" />
             </button>
+          </div>
+
+          <div className="flex items-center gap-4 md:flex-1 justify-end min-w-0">
+            {/* Instrument Selector */}
+            <div className={cn(
+              "flex p-1 rounded-full border shadow-lg backdrop-blur-3xl shrink-0",
+              theme === 'dark' ? "bg-white/5 border-white/5" : "bg-black/5 border-black/5"
+            )}>
+              {instruments.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => setInstrument(item.id)}
+                  className={cn(
+                    "flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-full text-[9px] uppercase tracking-widest font-black transition-all duration-300",
+                    instrument === item.id 
+                      ? "text-white" 
+                      : theme === 'dark' ? "text-white/40 hover:text-white/60" : "text-black/40 hover:text-black/60"
+                  )}
+                  style={instrument === item.id ? { 
+                    backgroundColor: settings.accentColor,
+                    boxShadow: `0 4px 12px ${settings.accentColor}4D`
+                  } : {}}
+                >
+                  <item.icon size={11} />
+                  <span className="lowercase first-letter:uppercase">{item.id === 'guitar' ? t('acoustic') : item.id === '12string' ? t('twelveString') : t('ukulele')}</span>
+                </button>
+              ))}
+            </div>
           </div>
         </header>
 
@@ -370,34 +427,10 @@ export default function App() {
                   tunedStrings={tunedStrings} 
                   activeNote={pitchData?.note}
                   activeCents={pitchData?.cents}
-                  className="opacity-20 top-[-100px] bottom-0"
+                  className="opacity-60 top-[-100px] bottom-0"
                 />
  
-                {/* Instrument Selector */}
-                <div className={cn(
-                  "flex p-1 rounded-2xl border mb-6 backdrop-blur-xl",
-                  theme === 'dark' ? "bg-white/5 border-white/5 shadow-2xl" : "bg-black/5 border-black/5 shadow-lg"
-                )}>
-                  {instruments.map((item) => (
-                    <button
-                      key={item.id}
-                      onClick={() => setInstrument(item.id)}
-                      className={cn(
-                        "flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] uppercase tracking-widest font-bold transition-all duration-300",
-                        instrument === item.id 
-                          ? "text-white" 
-                          : theme === 'dark' ? "text-white/40 hover:text-white/60" : "text-black/40 hover:text-black/60"
-                      )}
-                      style={instrument === item.id ? { 
-                        backgroundColor: settings.accentColor,
-                        boxShadow: `0 4px 12px ${settings.accentColor}4D`
-                      } : {}}
-                    >
-                      <item.icon size={12} />
-                      <span className="lowercase first-letter:uppercase">{item.id === 'guitar' ? t('acoustic') : item.id === '12string' ? t('twelveString') : t('ukulele')}</span>
-                    </button>
-                  ))}
-                </div>
+                {/* Tuner View Content */}
 
                 <div className={cn(
                    "w-full flex flex-col items-center",
@@ -647,6 +680,26 @@ export default function App() {
                     </h3>
                     <div className="h-0.5 w-8 rounded-full" style={{ backgroundColor: `${settings.accentColor}4D` }} />
                   </div>
+
+                  {/* Tuning Mnemonic Support - Reference Section Version */}
+                  <div 
+                    onClick={() => setMnemonicIdx((mnemonicIdx + 1) % EADGBE_MNEMONICS.length)}
+                    className="flex flex-col items-center gap-1 group cursor-pointer active:scale-95 transition-transform max-w-[300px] mb-2"
+                  >
+                    <div className="flex items-center gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
+                      <Languages size={10} className="text-emerald-500" />
+                      <span className="text-[9px] uppercase font-bold text-emerald-500/60 tracking-widest">
+                        {EADGBE_MNEMONICS[mnemonicIdx].lang}
+                      </span>
+                    </div>
+                    <p className={cn(
+                      "text-[11px] uppercase tracking-[0.15em] font-black text-center transition-all duration-500 leading-relaxed",
+                      theme === 'dark' ? "text-white/40 group-hover:text-emerald-400" : "text-black/40 group-hover:text-emerald-600"
+                    )}>
+                      {EADGBE_MNEMONICS[mnemonicIdx].phrase}
+                    </p>
+                  </div>
+
                   <ToneReference 
                     referenceA={referenceFreq} 
                     theme={theme} 
@@ -654,41 +707,6 @@ export default function App() {
                     accentColor={settings.accentColor}
                     onNoteTrigger={setPlayedReferenceNote}
                   />
-
-                  {/* Tuning Mnemonic Support */}
-                  <div 
-                    onClick={() => setMnemonicIdx((mnemonicIdx + 1) % EADGBE_MNEMONICS.length)}
-                    className="flex flex-col items-center gap-3 mt-4 group cursor-pointer active:scale-95 transition-transform"
-                  >
-                    <div className="flex items-center gap-2 px-2 py-0.5 rounded-full bg-white/5 border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Languages size={8} className="text-emerald-500" />
-                      <span className="text-[7px] uppercase font-bold text-white/40 tracking-wider">
-                        {EADGBE_MNEMONICS[mnemonicIdx].lang}
-                      </span>
-                    </div>
-                    <p className={cn(
-                      "text-[10px] sm:text-xs uppercase tracking-[0.2em] font-black text-center max-w-xs transition-all duration-500",
-                      theme === 'dark' ? "text-white/30 group-hover:text-emerald-400" : "text-black/30 group-hover:text-emerald-600"
-                    )}>
-                      {EADGBE_MNEMONICS[mnemonicIdx].phrase.split(' ').map((word, i) => {
-                        const isMatch = "EADGBE"[i] === word[0]?.toUpperCase();
-                        return (
-                          <span key={i} className="inline-block mr-2">
-                            <span className={cn(
-                              "font-serif italic border-b-2 transition-colors",
-                              isMatch ? "border-emerald-500 text-emerald-500" : "border-transparent"
-                            )}>
-                              {word[0]}
-                            </span>
-                            {word.slice(1)}
-                          </span>
-                        );
-                      })}
-                    </p>
-                    <div className="flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/20 bg-emerald-500/5 transition-opacity opacity-0 group-hover:opacity-100">
-                       <span className="text-[7px] uppercase font-bold text-emerald-500/60 leading-none tracking-widest">E - A - D - G - B - E</span>
-                    </div>
-                  </div>
 
                   {/* Circle of Fifths below Reference */}
                   <div className="mt-12 w-full max-w-sm">

@@ -18,7 +18,7 @@ export const translations = {
 
     // Tuner View
     acoustic: "Akustik",
-    twelveString: "12-Saiter",
+    twelveString: "12-Saiten",
     ukulele: "Ukulele",
     signal: "Signal",
     healing: "Heilung",
@@ -102,6 +102,8 @@ export const translations = {
     low: "Niedrig",
     high: "Hoch",
     close: "Schließen",
+    confirmReset: "Bist du sicher? Alle Einstellungen (Farben, Layout) werden auf Werkseinstellungen zurückgesetzt.",
+    factoryReset: "Auf Werkseinstellungen zurücksetzen",
 
     // Shapes & Hints
     p1Name: "Muster 1 (Die Basis)",
@@ -419,6 +421,8 @@ export const translations = {
     tapToReturn: "Tippen zum Zurückkehren",
     exploreAll: "Alle Riffs erkunden",
     fullStudio: "Vollständige Studio-Sammlung",
+    famousLyrics: "Berühmte Lyrics",
+    googleSearch: "Google Suche",
     items: "Objekte",
     nashville: "Nashville",
     refrainHook: "Refrain-Hook",
@@ -514,6 +518,8 @@ export const translations = {
     low: "Low",
     high: "High",
     close: "Close",
+    confirmReset: "Are you sure? All settings (colors, layout) will be restored to factory defaults.",
+    factoryReset: "Restore Factory Defaults",
 
     // Riff Titles (Auto-fallback to title in constants if not here)
     g1: "Midnight Strum",
@@ -808,6 +814,8 @@ export const translations = {
     tapToReturn: "tap to return",
     exploreAll: "Explore All Riffs",
     fullStudio: "Full Studio Collection",
+    famousLyrics: "Famous Lyrics",
+    googleSearch: "Google Search",
     items: "Items",
     nashville: "Nashville",
     refrainHook: "Refrain Hook",

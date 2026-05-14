@@ -43,6 +43,7 @@ export interface Riff {
   pattern: string;
   chords?: string;
   refrain?: string;
+  lyrics?: string;
   nashvilleNumbers?: string;
   category: InstrumentCategory;
 }
@@ -59,22 +60,12 @@ export const EADGBE_MNEMONICS: Mnemonic[] = [
   { lang: "English 2", phrase: "Eat All Day Get Big Easy" },
   { lang: "English 3", phrase: "Every Amateur Does Get Better Eventually" },
   { lang: "English 4", phrase: "Elvis Always Dug Good Banana Elvis" },
-  { lang: "English 5", phrase: "Even After Death Gary Busey Exists" },
-  { lang: "English 6", phrase: "Elephants And Dogs Grow Big Ears" },
-  { lang: "English 7", phrase: "Every Acid Dealer Gets Busted Eventually" },
-  { lang: "English 8", phrase: "Eat Apples Daily Get Big Energy" },
-  { lang: "English 9", phrase: "Eat A Dog Get Big Eggs" },
-  { lang: "English 10", phrase: "Every American Dog Gets Bones Easily" },
-  { lang: "English 11", phrase: "Every Awesome Dude Gets Better Everytime" },
-  { lang: "English 12", phrase: "Even Angels Deserve Great Big Eggs" },
   { lang: "Spanish", phrase: "En El Desierto Galopa Un Burro Enfermo" },
   { lang: "Spanish 2", phrase: "El Abuelo Solo Desea Guiso Barato E..." },
   { lang: "French", phrase: "Elle A Des Gars Bien Elevés" },
-  { lang: "French 2", phrase: "Ephémère Aube De Grâce Brillante Et..." },
   { lang: "Italian", phrase: "Enrico A Dato Grosse Botte E..." },
   { lang: "Dutch", phrase: "Een Aap Die Geen Bananen Eet" },
   { lang: "Swedish", phrase: "En Arg Duva Går Bakom Ekarna" },
-  { lang: "Swedish 2", phrase: "En Anka Dricker Gärna Blåbärs-Extrakt" },
   { lang: "Finnish", phrase: "Esa Antoi Danielille Grilli-Bileet E..." },
   { lang: "Danish", phrase: "En Alternativ Dame Går Bare Ensom" },
   { lang: "Norwegian", phrase: "En Annen Dag Går Bare Etterpå" },
@@ -83,9 +74,7 @@ export const EADGBE_MNEMONICS: Mnemonic[] = [
   { lang: "Polish", phrase: "Ewa Atakuje Dom Gdy Brat E..." },
   { lang: "Czech", phrase: "Eda A Dana Goli B... E..." },
   { lang: "Hungarian", phrase: "Egy Apró Darab Gitár Bolondít El" },
-  { lang: "Turkish", phrase: "En Az Dün Gibi Başarı E..." },
-  { lang: "Greek", phrase: "Ένας Άλλος Δίνει Γεύση Βαθιά Ε..." },
-  { lang: "Japanese", phrase: "Eddie Ate Dynamite..." }
+  { lang: "Turkish", phrase: "En Az Dün Gibi Başarı E..." }
 ];
 
 export const RIFFS: Riff[] = [
@@ -93,13 +82,13 @@ export const RIFFS: Riff[] = [
   { id: 'g1', title: 'Midnight Strum', description: 'A foundational acoustic pattern in G Major.', pattern: 'D D U U D U', chords: 'G - C - D - G', nashvilleNumbers: '1 - 4 - 5 - 1', category: 'guitar' },
   { id: 'g2', title: 'Mountain Echo', description: 'A fingerstyle arpeggio for warm resonance.', pattern: 'P I M A M I', chords: 'Am - C - G - D', nashvilleNumbers: '1m - 3 - 7 - 4', category: 'guitar' },
   { id: 'g3', title: 'Coastal Breeze', description: 'Light palm-muted texture for ambient rhythm.', pattern: 'M M S M M S', chords: 'Em7 - Cadd9 - G - D/F#', nashvilleNumbers: '6m - 4 - 1 - 5/7', category: 'guitar' },
-  { id: 'g4', title: 'Für Elise', description: 'Beethoven\'s classic theme arranged for guitar.', pattern: 'E4 D#4 E4 D#4 E4 B3 D4 C4 A3', chords: 'Am - E7 - Am', category: 'guitar' },
-  { id: 'g5', title: 'Hallelujah', description: 'Leonard Cohen\'s iconic arpeggio progression.', pattern: 'C3 E3 G3 A3 G3 E3', chords: 'C - Am - C - Am - F - G - C - G', nashvilleNumbers: '1 - 6m - 1 - 6m - 4 - 5 - 1 - 5', category: 'guitar' },
-  { id: 'g6', title: 'Smoke on Water', description: 'The most famous power chord riff ever.', pattern: 'G2 Bb2 C3 . G2 Bb2 Db3 C3 . G2 Bb2 C3 Bb2 G2', chords: 'G5 - Bb5 - C5', refrain: 'Smoke on the water, fire in the sky...', nashvilleNumbers: '1 - b3 - 4', category: 'guitar' },
-  { id: 'g7', title: 'Seven Nation Army', description: 'The ultimate stadium basement riff.', pattern: 'E3 . E3 G3 E3 D3 C3 B2', chords: 'Em - G - C - B', refrain: 'I\'m gonna fight \'em off, a seven nation army couldn\'t hold me back...', nashvilleNumbers: '1 - 1 - b3 - 1 - b7 - b6 - 5', category: 'guitar' },
-  { id: 'g8', title: 'Back in Black', description: 'High-voltage AC/DC power rhythm.', pattern: 'E2 . D3 . A2 . . E2 . D3 . A2 . . G3 E3', chords: 'E - D - A', refrain: 'Back in black, I hit the sack, I\'ve been too long, I\'m glad to be back...', nashvilleNumbers: '1 - b7 - 4', category: 'guitar' },
-  { id: 'g9', title: 'Iron Man', description: 'Tony Iommi\'s heavy metal blueprint.', pattern: 'B2 D3 D3 E3 E3 G3 F#3 G3 F#3 G3 D3 D3 E3 E3', chords: 'B5 - D5 - E5', nashvilleNumbers: '1 - b3 - 4', category: 'guitar' },
-  { id: 'g10', title: 'Sweet Child O\' Mine', description: 'Slash\'s circular melodic exercise.', pattern: 'D3 D4 A3 G3 G4 A3 F#4 A3', chords: 'D - C - G - D', nashvilleNumbers: '1 - b7 - 4 - 1', category: 'guitar' },
+  { id: 'g4', title: 'Für Elise', description: 'Beethoven\'s classic theme arranged for guitar.', pattern: 'E4 D#4 E4 D#4 E4 B3 D4 C4 A3', chords: 'Am - E7 - Am', lyrics: 'Instrumental classical masterpiece.', category: 'guitar' },
+  { id: 'g5', title: 'Hallelujah', description: 'Leonard Cohen\'s iconic arpeggio progression.', pattern: 'C3 E3 G3 A3 G3 E3', chords: 'C - Am - C - Am - F - G - C - G', lyrics: 'I heard there was a secret chord, that David played and it pleased the Lord...', nashvilleNumbers: '1 - 6m - 1 - 6m - 4 - 5 - 1 - 5', category: 'guitar' },
+  { id: 'g6', title: 'Smoke on Water', description: 'The most famous power chord riff ever.', pattern: 'G2 Bb2 C3 . G2 Bb2 Db3 C3 . G2 Bb2 C3 Bb2 G2', chords: 'G5 - Bb5 - C5', lyrics: 'Smoke on the water, A fire in the sky...', refrain: 'Smoke on the water, fire in the sky...', nashvilleNumbers: '1 - b3 - 4', category: 'guitar' },
+  { id: 'g7', title: 'Seven Nation Army', description: 'The ultimate stadium basement riff.', pattern: 'E3 . E3 G3 E3 D3 C3 B2', chords: 'Em - G - C - B', lyrics: 'I\'m gonna fight \'em off, A seven nation army couldn\'t hold me back...', refrain: 'I\'m gonna fight \'em off, a seven nation army couldn\'t hold me back...', nashvilleNumbers: '1 - 1 - b3 - 1 - b7 - b6 - 5', category: 'guitar' },
+  { id: 'g8', title: 'Back in Black', description: 'High-voltage AC/DC power rhythm.', pattern: 'E2 . D3 . A2 . . E2 . D3 . A2 . . G3 E3', chords: 'E - D - A', lyrics: 'Back in black, I hit the sack, I\'ve been too long, I\'m glad to be back...', refrain: 'Back in black, I hit the sack, I\'ve been too long, I\'m glad to be back...', nashvilleNumbers: '1 - b7 - 4', category: 'guitar' },
+  { id: 'g9', title: 'Iron Man', description: 'Tony Iommi\'s heavy metal blueprint.', pattern: 'B2 D3 D3 E3 E3 G3 F#3 G3 F#3 G3 D3 D3 E3 E3', chords: 'B5 - D5 - E5', lyrics: 'I am Iron Man! Has he lost his mind? Can he see or is he blind?', nashvilleNumbers: '1 - b3 - 4', category: 'guitar' },
+  { id: 'g10', title: 'Sweet Child O\' Mine', description: 'Slash\'s circular melodic exercise.', pattern: 'D3 D4 A3 G3 G4 A3 F#4 A3', chords: 'D - C - G - D', lyrics: 'She\'s got a smile that it seems to me, Reminds me of childhood memories...', nashvilleNumbers: '1 - b7 - 4 - 1', category: 'guitar' },
   { id: 'g11', title: 'Sunshine of Your Love', description: 'The essential blues-rock lick.', pattern: 'D3 D3 C3 D3 A2 Ab2 G2 D3', chords: 'D5 - C5 - G5', nashvilleNumbers: '1 - b7 - 4', category: 'guitar' },
   { id: 'g12', title: 'Day Tripper', description: 'The Beatles\' driving circular riff.', pattern: 'E2 G2 G#2 B2 E3 D3 B2 G3 A3 F#3', chords: 'E7 - A7 - B7', nashvilleNumbers: '1 - 4 - 5', category: 'guitar' },
   { id: 'g13', title: 'Satisfaction', description: 'Keith Richards\' fuzzed-out foundation.', pattern: 'B2 B2 B2 C#3 D3 D3 D3 C#3 B2', chords: 'E - A - D', nashvilleNumbers: '1 - 4 - b7', category: 'guitar' },

@@ -190,7 +190,7 @@ export function RiffLibrary({
                       transition={{ type: "spring", stiffness: 300, damping: 30 }}
                       style={{ transformStyle: "preserve-3d" }}
                       className={cn(
-                        "group p-6 rounded-3xl border transition-all cursor-pointer flex flex-col justify-between relative overflow-hidden h-[240px]",
+                        "group p-6 rounded-3xl border transition-all cursor-pointer flex flex-col justify-between relative h-[360px]",
                         isDark 
                           ? "bg-emerald-500/10 border-emerald-500/20 hover:bg-emerald-500/20" 
                           : "bg-emerald-500/5 border-emerald-500/20 hover:bg-emerald-500/10 shadow-sm"
@@ -268,24 +268,27 @@ export function RiffLibrary({
                       </div>
 
                       {/* Back Side */}
-                      <div className="absolute inset-0 p-8 flex flex-col items-center justify-center text-center bg-emerald-950/95" style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}>
+                      <div className={cn(
+                        "absolute inset-0 p-8 flex flex-col items-center justify-center text-center rounded-3xl",
+                        isDark ? "bg-emerald-950/95" : "bg-emerald-900 shadow-2xl"
+                      )} style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}>
                         <div className="absolute top-4 left-4">
                            <Star size={16} className="text-amber-400 fill-amber-400 opacity-30" />
                         </div>
                         
-                        <div className="flex flex-col gap-5 w-full">
-                          {riff.refrain && (
-                            <div className="space-y-1">
-                              <span className="text-[9px] uppercase tracking-[0.4em] text-emerald-500/40 font-black">{t('lyricRefrain')}</span>
-                              <p className="text-lg font-black italic text-white leading-tight underline decoration-emerald-500/30 underline-offset-4">
-                                "{riff.refrain}"
+                        <div className="flex flex-col gap-6 w-full">
+                          {(riff.lyrics || riff.refrain) && (
+                            <div className="space-y-2">
+                              <span className="text-[9px] uppercase tracking-[0.4em] text-emerald-500/40 font-black">{t('famousLyrics')}</span>
+                              <p className="text-lg font-black italic text-white leading-tight underline decoration-emerald-500/30 underline-offset-4 line-clamp-4">
+                                "{riff.lyrics || riff.refrain}"
                               </p>
                             </div>
                           )}
                           
                           <div className="space-y-1">
                             <span className="text-[9px] uppercase tracking-[0.4em] text-emerald-500/40 font-black">{t('focusTip')}</span>
-                            <p className="text-xs text-white/60 leading-relaxed font-medium px-4">
+                            <p className="text-xs text-white/50 leading-relaxed font-medium px-4 line-clamp-3">
                               {t((riff.id + 'Desc') as any, riff.description)}
                             </p>
                           </div>
@@ -296,10 +299,10 @@ export function RiffLibrary({
                                 target="_blank"
                                 rel="noreferrer"
                                 onClick={(e) => e.stopPropagation()}
-                                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500/30 transition-all"
+                                className="group/btn inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white text-[10px] font-black uppercase tracking-widest hover:bg-white hover:text-emerald-900 hover:border-white transition-all shadow-lg"
                              >
-                                <ExternalLink size={12} />
-                                {t('searchChords')}
+                                <Compass size={14} className="group-hover/btn:rotate-45 transition-transform" />
+                                {t('googleSearch')}
                              </a>
                           </div>
                         </div>
@@ -454,38 +457,38 @@ export function RiffLibrary({
                       <Music className="text-emerald-400" size={40} />
                     </div>
                     
-                    <div className="flex flex-col gap-8 max-w-[280px]">
-                      {riff.refrain ? (
-                        <div className="space-y-2">
-                          <h4 className="text-emerald-400 text-[10px] font-black uppercase tracking-[0.4em]">{t('lyricRefrain')}</h4>
-                          <p className="text-xl sm:text-2xl font-black italic underline decoration-emerald-500/30 underline-offset-8 leading-tight text-white">
-                            "{riff.refrain}"
+                    <div className="flex flex-col gap-8 w-full max-w-[320px]">
+                      {(riff.lyrics || riff.refrain) ? (
+                        <div className="space-y-3">
+                          <h4 className="text-emerald-400 text-[10px] font-black uppercase tracking-[0.5em] mb-2">{t('famousLyrics')}</h4>
+                          <p className="text-xl sm:text-2xl font-black italic underline decoration-emerald-500/30 underline-offset-8 leading-tight text-white mb-4 line-clamp-5">
+                            "{riff.lyrics || riff.refrain}"
                           </p>
                         </div>
                       ) : (
                         <div className="space-y-4">
-                           <Music className="text-white/20 mx-auto" size={48} />
-                           <p className="text-lg font-bold text-white/70 italic">"{riff.description}"</p>
+                           <Music className="text-white/20 mx-auto" size={56} />
+                           <p className="text-xl font-black text-white/70 italic leading-snug line-clamp-4">"{riff.description}"</p>
                         </div>
                       )}
 
-                      <div className="mt-2">
+                      <div className="mt-4">
                          <a 
                             href={`https://www.google.com/search?q=${encodeURIComponent(riff.title + " chords and lyrics")}`}
                             target="_blank"
                             rel="noreferrer"
                             onClick={(e) => e.stopPropagation()}
-                            className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-white/10 border border-white/20 text-white text-[11px] font-black uppercase tracking-widest hover:bg-white/20 transition-all"
+                            className="group/btn inline-flex items-center gap-3 px-8 py-3.5 rounded-2xl bg-white/10 border border-white/20 text-white text-[12px] font-black uppercase tracking-widest hover:bg-white hover:text-emerald-900 hover:border-white transition-all shadow-xl"
                          >
-                            <ExternalLink size={14} />
-                            Find Full Chords & Lyrics
+                            <Compass size={16} className="group-hover/btn:rotate-90 transition-transform duration-500" />
+                            {t('googleSearch')}
                          </a>
                       </div>
                     </div>
 
-                    <div className="mt-8 flex gap-3">
+                    <div className="mt-10 flex items-center gap-4">
                        <ArrowRight className="text-emerald-500/50 rotate-180" size={24} />
-                       <span className="text-[10px] uppercase tracking-widest font-black text-white/20">{t('tapToReturn')}</span>
+                       <span className="text-[10px] uppercase tracking-[0.3em] font-black text-white/30">{t('tapToReturn')}</span>
                     </div>
                   </div>
                 </motion.div>
@@ -624,30 +627,30 @@ export function RiffLibrary({
                     "absolute inset-0 p-6 flex flex-col items-center justify-center text-center rounded-3xl",
                     isDark ? "bg-emerald-950/95" : "bg-emerald-900 shadow-2xl"
                   )} style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}>
-                    <div className="flex flex-col gap-4 w-full">
-                       {riff.refrain && (
-                         <div className="space-y-1">
-                           <span className="text-[8px] uppercase tracking-[0.3em] text-emerald-500/40 font-black">{t('refrainHook')}</span>
-                           <p className="text-base font-black italic text-white leading-tight underline decoration-emerald-500/30 underline-offset-4">
-                             "{riff.refrain}"
+                    <div className="flex flex-col gap-6 w-full">
+                       {(riff.lyrics || riff.refrain) && (
+                         <div className="space-y-2">
+                           <span className="text-[9px] uppercase tracking-[0.4em] text-emerald-500/40 font-black">{t('famousLyrics')}</span>
+                           <p className="text-lg font-black italic text-white leading-tight underline decoration-emerald-500/30 underline-offset-4 line-clamp-3">
+                             "{riff.lyrics || riff.refrain}"
                            </p>
                          </div>
                        )}
                        <div className="space-y-1">
-                          <span className="text-[8px] uppercase tracking-[0.3em] text-emerald-500/40 font-black">{t('guitaristTip')}</span>
-                          <p className="text-xs font-bold text-white/40 leading-snug px-2">"{t((riff.id + 'Desc') as any, riff.description)}"</p>
+                          <span className="text-[9px] uppercase tracking-[0.4em] text-emerald-500/40 font-black">{t('guitaristTip')}</span>
+                          <p className="text-xs font-bold text-white/30 leading-snug px-2 line-clamp-2 italic">"{t((riff.id + 'Desc') as any, riff.description)}"</p>
                        </div>
 
                            <div className="mt-2">
                              <a 
-                               href={`https://www.google.com/search?q=${encodeURIComponent(riff.title + " chords and lyrics")}`}
-                               target="_blank"
-                               rel="noreferrer"
-                               onClick={(e) => e.stopPropagation()}
-                               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 border border-white/10 text-white/60 text-[9px] font-black uppercase tracking-widest hover:bg-white/20 hover:text-white transition-all mx-auto w-fit"
+                                href={`https://www.google.com/search?q=${encodeURIComponent(riff.title + " chords and lyrics")}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="group/btn inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white/80 text-[10px] font-black uppercase tracking-widest hover:bg-white hover:text-emerald-900 transition-all mx-auto w-fit shadow-lg"
                              >
-                               <ExternalLink size={12} />
-                               {t('searchChords')}
+                                <Compass size={14} className="group-hover/btn:rotate-45 transition-transform" />
+                                {t('googleSearch')}
                              </a>
                            </div>
                     </div>
